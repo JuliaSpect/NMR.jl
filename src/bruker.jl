@@ -29,3 +29,12 @@ function parse_param(param, val)
     end
     return strip(val)
 end
+
+Spectrum(path :: AbstractString) = begin
+    fid = read_bruker_binary(joinpath(path, "fid"))
+    re_ft = read_bruker_binary(joinpath(path, "pdata", "1", "1r"))
+    im_ft = read_bruker_binary(joinpath(path, "pdata", "1", "1i"))
+    acqu = acq_params(joinpath(path, "acqu"))
+
+    Spectrum(fid, re_ft, im_ft, acqu)
+end
