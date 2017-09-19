@@ -5,10 +5,11 @@ limits(o1p, sw) = (o1p - sw/2, o1p + sw/2)
 
 import Plots: plot
 
-plot(s :: Spectrum, fid :: Bool = false) = begin
-    if fid
+function plot(s :: Spectrum, fid :: Bool = false)
+    if !fid
     lo,hi = limits(s)
     shifts = linspace(lo, hi, length(s.re_ft))    
     # (shifts, s.re_ft)
     plot(shifts, s.re_ft, xflip=true)
+    end
 end

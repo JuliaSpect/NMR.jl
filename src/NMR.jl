@@ -4,11 +4,16 @@ module NMR
 
 using Interpolations
 
-struct Spectrum
-    fid :: Vector{Int32}
+struct ProcessedSpectrum
     re_ft :: Vector{Int32}
     im_ft :: Vector{Int32}
+    params :: Dict{Any, Any}
+end
+
+struct Spectrum
+    fid :: Vector{Int32}
     acqu :: Dict{Any, Any}
+    procs :: Dict{Int,ProcessedSpectrum}
 end
 
 include("analysis.jl")
