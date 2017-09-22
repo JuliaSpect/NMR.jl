@@ -43,30 +43,29 @@ function parse_param(param, val)
     return strip(val)
 end
 
-Spectrum(path :: AbstractString) = begin
-    fid = read_bruker_binary(joinpath(path, "fid"))
-    acqu = read_params(joinpath(path, "acqu"))
-    procs = Dict()
-    for procno in readdir(joinpath(path, "pdata"))
-        proc_path = joinpath(path, "pdata", procno)
-        re_ft = read_bruker_binary(joinpath(proc_path, "1r"))
-        im_ft = read_bruker_binary(joinpath(proc_path, "1i"))
-        params = read_params(joinpath(proc_path, "proc"))
-        procs[parse(Int, procno)] = ProcessedSpectrum(re_ft, im_ft, params)
-    end
-    Spectrum(fid, acqu, procs)
+ProcessedSpectrum(path :: AbstractString) = begin
+    re_ft = read_bruker_binary(joinpath(path, "1r"))
+    im_ft = read_bruker_binary(joinpath(path, "1i"))
+    params = read_params(joinpath(path, "proc"))
+    ProcessedSpectrum(re_ft, im_ft, params)
 end
 
-Spectrum(path :: AbstractString, procnos :: AbstractArray{T} where T <: Integer) = begin
+Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}, default_proc :: Int) = begin
     fid = read_bruker_binary(joinpath(path, "fid"))
     acqu = read_params(joinpath(path, "acqu"))
     procs = Dict()
     for procno in procnos
         proc_path = joinpath(path, "pdata", string(procno))
-        re_ft = read_bruker_binary(joinpath(proc_path, "1r"))
-        im_ft = read_bruker_binary(joinpath(proc_path, "1i"))
-        params = read_params(joinpath(proc_path, "proc"))
-        procs[procno] = ProcessedSpectrum(re_ft, im_ft, params)
+        procs[procno] = ProcessedSpectrum(proc_path)
     end
-    Spectrum(fid, acqu, procs)
+    Spectrum(fid, acqu, procs, default_proc)
+end
+
+Spectrum(path :: AbstractString, procno :: Int) = Spectrum(path, [procno], procno)
+
+Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}) = Spectrum(path, procnos, default_proc = minimum(procnos))
+
+Spectrum(path :: AbstractString) = begin
+    procnos = [n for n in readdir(joinpath(path, "pdata")) if isdir(n)]
+    Spectrum(path, procnos)
 end

@@ -8,3 +8,12 @@ function analyze_lsq(mix::Vector{T}, library::Vector{Vector{S}}) where T<:Number
     residue = norm(lib_matrix * guess - mix, 2) / norm(mix, 2)
     (guess, residue)
 end
+
+function analyze_lsq(mix::Spectrum, library::AbstractArray{Spectrum, 1}, dark_areas::AbstractArray{UnitRange, 1} = [])
+    lib_reals = (s.procs[1].re_ft for s in library)
+    lib_matrix = hcat(library...)
+    guess =  lib_matrix \ mix
+    residue = norm(lib_matrix * guess - mix, 2) / norm(mix, 2)
+    (guess, residue)
+end
+

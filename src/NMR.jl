@@ -14,7 +14,10 @@ struct Spectrum
     fid :: Vector{Int32}
     acqu :: Dict{Any, Any}
     procs :: Dict{Int,ProcessedSpectrum}
+    default_proc :: Int
 end
+
+Spectrum(fid :: Vector{Int32}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum) = Spectrum(fid, acqu, Dict(1=>proc), default_proc = 1)
 
 include("analysis.jl")
 include("bruker.jl")
