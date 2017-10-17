@@ -1,5 +1,8 @@
-limits(s :: Spectrum) = limits(s.acqu["O1P"], s.acqu["SW"])
-limits(o1p, sw) = (o1p - sw/2, o1p + sw/2)
+limits(s::Spectrum) = limits(s["O1P"], s["SW"], s["SF"], s["BF1"])
+limits(o1p, sw, sf, bf) = begin
+    shift = 1e6(bf-sf)/bf
+    (o1p - sw/2 + shift, o1p + sw/2 + shift)
+end
 
 """     toppm(f, bf)
 Hz to ppm conversion of a function
@@ -10,11 +13,30 @@ function toppm(f, bf)
     δ -> f(bf*(1.0+δ*1e-6))
 end
 
+function sr(sf, bf)
+    return 1e6(sf-bf)
+end
+
+function ppmtoindex(δ, sw, o1p, sr, sf)
+    max_shift = o1p + 0.5sw - sr/sf 
+end
+
+function ppmtoindex(s::Spectrum, δ)
+    min_δ ,max_δ = limits(s)
+    Int(round((max_δ - δ)/(max_δ - min_δ) * s["SI"]))
+end
+
+function indexintrng(s::Spectrum)
+    intrng = s[s.default_proc].intrng
+    println(intrng)
+    [ppmtoindex(s,i[1]):ppmtoindex(s,i[2]) for i in intrng]
+end
+
 ### Plotting functions
 
 import Plots: plot
 
-function plot(s :: Spectrum, fid :: Bool = false)
+function plot(s::Spectrum, fid::Bool = false)
     if !fid
     lo,hi = limits(s)
     shifts = linspace(lo, hi, length(s.re_ft))    

@@ -13,7 +13,7 @@ function parse_float_list(m)
     [float(s) for s in split(m)[2:end]]
 end
 
-filters = [ ( Set(["SW", "O1", "SFO1"]),
+filters = [ ( Set(["SW", "O1", "SFO1", "SF", "BF1"]),
               float ),
             ( Set(["TD", "NS", "DS", "SI"]),
               s -> parse(Int, s) ),
@@ -34,6 +34,15 @@ function read_params(file)
     res
 end
 
+function read_intrng(file)
+    firstline = strip(readline(file))
+    if firstline[1] == 'A'
+        [tuple(map(float,split(line)[1:2])...) for line in readlines(file)[3:end]]
+    elseif firstline[1] == 'P'
+        [tuple(map(float,split(line))...) for line in readlines(file)[2:end]]
+    end
+end
+
 function parse_param(param, val)
     for (names, fun) in filters
         if param in names
@@ -43,11 +52,13 @@ function parse_param(param, val)
     return strip(val)
 end
 
+
 ProcessedSpectrum(path :: AbstractString) = begin
     re_ft = read_bruker_binary(joinpath(path, "1r"))
     im_ft = read_bruker_binary(joinpath(path, "1i"))
     params = read_params(joinpath(path, "proc"))
-    ProcessedSpectrum(re_ft, im_ft, params)
+    intrng = read_intrng(joinpath(path, "intrng"))
+    ProcessedSpectrum(re_ft, im_ft, params, intrng)
 end
 
 Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}, default_proc :: Int) = begin
@@ -63,9 +74,9 @@ end
 
 Spectrum(path :: AbstractString, procno :: Int) = Spectrum(path, [procno], procno)
 
-Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}) = Spectrum(path, procnos, default_proc = minimum(procnos))
+Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}) = Spectrum(path, procnos, minimum(procnos))
 
 Spectrum(path :: AbstractString) = begin
-    procnos = [n for n in readdir(joinpath(path, "pdata")) if isdir(n)]
+    procnos = [parse(Int,n) for n in readdir(joinpath(path, "pdata"))]
     Spectrum(path, procnos)
 end
