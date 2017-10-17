@@ -12,6 +12,7 @@ struct ProcessedSpectrum
 end
 
 Base.getindex(p::ProcessedSpectrum, param::AbstractString) = p.params[param]
+Base.getindex(p::ProcessedSpectrum, ::Colon) = p.re_ft
 Base.getindex(p::ProcessedSpectrum, r::Range) = p.re_ft[r]
 
 struct Spectrum
@@ -22,6 +23,7 @@ struct Spectrum
 end
 
 Base.getindex(s::Spectrum, i::Int) = s.procs[i]
+Base.getindex(s::Spectrum, ::Colon) = s[s.default_proc].re_ft
 Base.getindex(s::Spectrum, r::Range) = s[s.default_proc].re_ft[r]
 function Base.getindex(s::Spectrum, param::AbstractString)
     try
