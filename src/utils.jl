@@ -34,15 +34,18 @@ end
 
 ### Plotting functions
 
-import Plots: plot
+import Plots
 
-function plot(s::Spectrum, fid::Bool = false)
-    if !fid
+function plot!(s::Spectrum; kw...)
     lo,hi = limits(s)
-    shifts = linspace(lo, hi, length(s.re_ft))    
-    # (shifts, s.re_ft)
-    plot(shifts, s.re_ft, xflip=true)
-    end
+    re_ft = s[s.default_proc].re_ft
+    shifts = linspace(hi, lo, length(re_ft))
+    Plots.plot!(shifts, re_ft, xflip=true; kw...)
+end
+
+function plot(s::Spectrum; kw...)
+    Plots.plot()
+    plot!(s;kw...)
 end
 
 ### Pulse power profile
