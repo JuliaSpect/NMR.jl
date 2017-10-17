@@ -26,12 +26,6 @@ function ppmtoindex(s::Spectrum, δ)
     Int(round((max_δ - δ)/(max_δ - min_δ) * s["SI"]))
 end
 
-function indexintrng(s::Spectrum)
-    intrng = s[s.default_proc].intrng
-    println(intrng)
-    [ppmtoindex(s,i[1]):ppmtoindex(s,i[2]) for i in intrng]
-end
-
 ### Plotting functions
 
 import Plots

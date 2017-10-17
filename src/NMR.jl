@@ -12,6 +12,7 @@ struct ProcessedSpectrum
 end
 
 Base.getindex(p::ProcessedSpectrum, param::AbstractString) = p.params[param]
+Base.getindex(p::ProcessedSpectrum, r::Range) = p.re_ft[r]
 
 struct Spectrum
     fid :: Vector{Int32}
@@ -21,6 +22,7 @@ struct Spectrum
 end
 
 Base.getindex(s::Spectrum, i::Int) = s.procs[i]
+Base.getindex(s::Spectrum, r::Range) = s[s.default_proc].re_ft[r]
 function Base.getindex(s::Spectrum, param::AbstractString)
     try
         s.acqu[param]
@@ -35,6 +37,7 @@ include("analysis.jl")
 include("bruker.jl")
 include("interpolation.jl")
 include("utils.jl")
+include("intrng.jl")
 
 
 export read_bruker_binary, acq_params, interpolate_spect, analyze_lsq
