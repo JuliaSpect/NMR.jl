@@ -5,8 +5,8 @@ module NMR
 using Interpolations
 
 struct ProcessedSpectrum
-    re_ft :: Vector{Int32}
-    im_ft :: Vector{Int32}
+    re_ft :: Vector
+    im_ft :: Vector
     params :: Dict{AbstractString, Any}
     intrng :: Vector{Tuple{Float64, Float64}}
 end

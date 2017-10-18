@@ -56,8 +56,8 @@ end
 
 
 ProcessedSpectrum(path :: AbstractString) = begin
-    re_ft = read_bruker_binary(joinpath(path, "1r"))
-    im_ft = read_bruker_binary(joinpath(path, "1i"))
+    re_ft = float(read_bruker_binary(joinpath(path, "1r")))
+    im_ft = float(read_bruker_binary(joinpath(path, "1i")))
     params = read_params(joinpath(path, "proc"))
     intrng = read_intrng(joinpath(path, "intrng"))
     ProcessedSpectrum(re_ft, im_ft, params, intrng)
