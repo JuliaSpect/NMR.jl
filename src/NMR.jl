@@ -2,7 +2,7 @@
 
 module NMR
 
-using Interpolations
+export Spectrum, ProcessedSpectrum, plot, plot!
 
 struct ProcessedSpectrum
     re_ft :: Vector
@@ -35,7 +35,6 @@ end
 
 Spectrum(fid :: Vector{Int32}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum) = Spectrum(fid, acqu, Dict(1=>proc), default_proc = 1)
 
-include("analysis.jl")
 include("bruker.jl")
 include("interpolation.jl")
 include("utils.jl")

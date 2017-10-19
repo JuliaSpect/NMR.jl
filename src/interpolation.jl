@@ -1,5 +1,7 @@
 # Continuous interpolation of discrete frequency-domain data
 
+using Interpolations
+
 """interpolate_spectrum(data, cs_range)"""
 function interpolate_spectrum(data, cs_range, options... = [BSpline(Cubic(Natural())), OnGrid()])
     lo, hi = cs_range
