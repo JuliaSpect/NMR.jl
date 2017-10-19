@@ -28,18 +28,17 @@ end
 
 ### Plotting functions
 
-import Plots
+import Plots: plot, plot!
 
-function plot!(s::Spectrum; kw...)
-    lo,hi = limits(s)
-    re_ft = s[s.default_proc].re_ft
-    shifts = linspace(hi, lo, length(re_ft))
-    Plots.plot!(shifts, re_ft, xflip=true; kw...)
-end
-
-function plot(s::Spectrum; kw...)
-    Plots.plot()
-    plot!(s;kw...)
+for f in (:plot, :plot!)
+    @eval begin
+        ($f)(s::Spectrum;kw...) = begin
+            lo,hi = limits(s)
+            re_ft = s[s.default_proc].re_ft
+            shifts = linspace(hi, lo, length(re_ft))
+            $f(shifts, re_ft, xflip=true, legend=false, yticks=([],[]); kw...)
+        end
+    end
 end
 
 ### Pulse power profile
