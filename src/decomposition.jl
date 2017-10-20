@@ -66,8 +66,9 @@ function lsq_analyze(s::NMR.Spectrum, lib::Vector{NMR.Spectrum}, dark_areas::Vec
     for (i,m) in enumerate(matrices)
         if i==best
             recon = m*res[best][1]
-            return (res[best][2], refnums, res[best][1]'.*m, 
-                    plot([sig, recon, sig.-recon]))
+            residue = sig .- recon
+            components = res[best][1]'.*m
+            return (res[best], refnums, components, recon, residue)
         end
     end
 end

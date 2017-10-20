@@ -4,6 +4,12 @@ limits(o1p, sw, sf, bf) = begin
     (o1p - sw/2 + shift, o1p + sw/2 + shift)
 end
 
+function chemical_shifts(s::Spectrum)
+    lo,hi = limits(s)
+    linspace(hi,lo,length(s[:]))
+end
+
+
 """     toppm(f, bf)
 Hz to ppm conversion of a function
 f: Function that takes frequency. (Hz)

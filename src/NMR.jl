@@ -46,6 +46,6 @@ include("decomposition.jl")
 
 
 export read_bruker_binary, acq_params, interpolate_spect, lsq_analyze,
-       overlay!, candidates, cand_signals, guess_matrices
+       overlay!, candidates, cand_signals, guess_matrices, limits, chemical_shifts
 
 end
