@@ -55,23 +55,29 @@ function parse_param(param, val)
 end
 
 
-ProcessedSpectrum(path :: AbstractString) = begin
+function ProcessedSpectrum(path :: AbstractString, procno :: Int)
     re_ft = float(read_bruker_binary(joinpath(path, "1r")))
     im_ft = float(read_bruker_binary(joinpath(path, "1i")))
     params = read_params(joinpath(path, "proc"))
+    params["TITLE"] = readstring(joinpath(path, "title"))
     intrng = read_intrng(joinpath(path, "intrng"))
-    ProcessedSpectrum(re_ft, im_ft, params, intrng)
+    ProcessedSpectrum(re_ft, im_ft, params, intrng, procno)
 end
+
+ProcessedSpectrum(path::AbstractString) = ProcessedSpectrum(path, parse(Int, basename(path)))
 
 Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}, default_proc :: Int) = begin
     fid = read_bruker_binary(joinpath(path, "fid"))
     acqu = read_params(joinpath(path, "acqu"))
+    name = basename(dirname(path))
+    expno = parse(Int, basename(path))
     procs = Dict()
     for procno in procnos
         proc_path = joinpath(path, "pdata", string(procno))
-        procs[procno] = ProcessedSpectrum(proc_path)
+        procs[procno] = ProcessedSpectrum(proc_path, procno)
     end
-    Spectrum(fid, acqu, procs, default_proc)
+    acqu["TITLE"] = procs[default_proc].params["TITLE"] # Much more useful
+    Spectrum(fid, acqu, procs, default_proc, name, expno)
 end
 
 Spectrum(path :: AbstractString, procno :: Int) = Spectrum(path, [procno], procno)
