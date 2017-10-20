@@ -42,8 +42,10 @@ include("bruker.jl")
 include("interpolation.jl")
 include("utils.jl")
 include("intrng.jl")
+include("decomposition.jl")
 
 
-export read_bruker_binary, acq_params, interpolate_spect, analyze_lsq
+export read_bruker_binary, acq_params, interpolate_spect, lsq_analyze,
+       overlay!, candidates, cand_signals, guess_matrices
 
 end
