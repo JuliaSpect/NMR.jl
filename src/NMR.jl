@@ -28,6 +28,7 @@ end
 Base.getindex(s::Spectrum, i::Int) = s.procs[i]
 Base.getindex(s::Spectrum, ::Colon) = s[s.default_proc].re_ft
 Base.getindex(s::Spectrum, r::Range) = s[s.default_proc].re_ft[r]
+Base.getindex(s::Spectrum, rng::Tuple{Float64,Float64}) = s[ppmtoindex(s,rng)]
 function Base.getindex(s::Spectrum, param::AbstractString)
     try
         s.acqu[param]
@@ -43,6 +44,7 @@ include("interpolation.jl")
 include("utils.jl")
 include("integration.jl")
 include("decomposition.jl")
+include("plotting.jl")
 
 
 export read_bruker_binary, acq_params, interpolate_spect, lsq_analyze,

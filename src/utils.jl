@@ -32,21 +32,17 @@ function ppmtoindex(s::Spectrum, δ)
     Int(round((max_δ - δ)/(max_δ - min_δ) * s["SI"]))
 end
 
-### Plotting functions
-
-import Plots: plot, plot!
-
-for f in (:plot, :plot!)
-    @eval begin
-        ($f)(s::Spectrum;kw...) = begin
-            lo,hi = limits(s)
-            re_ft = s[s.default_proc].re_ft
-            shifts = linspace(hi, lo, length(re_ft))
-            $f(shifts, re_ft, xflip=true, legend=false, yticks=([],[]); kw...)
-        end
+function ppmtoindex(s::Spectrum, rng::Tuple{Float64,Float64})
+    r1,r2 = rng
+    if r1>r2
+        ppmtoindex(s,r1):ppmtoindex(s,r2)
+    else
+        ppmtoindex(s,r2):ppmtoindex(s,r1)
     end
 end
 
+Base.length(s::Spectrum) = length(s[:])
+Base.length(p::ProcessedSpectrum) = length(p[:])
 ### Pulse power profile
 
 """     powerprofile(pulse, dt, sfo1)
