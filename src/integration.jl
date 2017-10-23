@@ -18,3 +18,17 @@ function remove_rng(p::ProcessedSpectrum, δ)
         end
     end
 end
+
+integrate(p::ProcessedSpectrum, r::Range) = sum(p[r])
+
+function integrate(p::ProcessedSpectrum, ref_rng::Int)
+    rngs = p.intrng
+    ref_int = integrate(p, rngs[ref_rng])
+    [integrate(p, r)/ref_int for r in p.intrng]
+end
+
+function integrate(p::ProcessedSpectrum)
+    [integrate(p, r)/ref_int for r in p.intrng]
+end
+
+integrate(s::Spectrum, args...) = integrate(s[s.default_proc], args...)

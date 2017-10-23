@@ -41,7 +41,7 @@ Spectrum(fid :: Vector{Int32}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum
 include("bruker.jl")
 include("interpolation.jl")
 include("utils.jl")
-include("intrng.jl")
+include("integration.jl")
 include("decomposition.jl")
 
 
