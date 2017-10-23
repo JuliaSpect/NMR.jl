@@ -28,19 +28,20 @@ function candidates(signal, chunk, start_pos; tol = 125)
                           (i==1 || corr[i] > corr[i-1])]
 end
  
-candidates(s::NMR.Spectrum, args...; kw...) = candidates(s[:],args...;kw...)
-candidates(s::NMR.Spectrum, l::NMR.Spectrum, args...; kw...) = 
-    [ candidates(s[:], l[r], r.start) for r in NMR.intrng_indices(l) ]
+candidates(s::Spectrum, args...; kw...) = candidates(s[:],args...;kw...)
+candidates(s::Spectrum, l::Spectrum, args...; kw...) =
+    [ candidates(s[:], l[r], r.start, args...; kw...) for r in intrng_indices(l) ]
 
 
-function cand_signals(s::NMR.Spectrum, l::NMR.Spectrum)
+function cand_signals(s::Spectrum, l::Spectrum)
     positions = candidates(s, l)
-    i = NMR.intrng_indices(l)
-    chunks = [l[r] for r in NMR.intrng_indices(l)]
-    (overlay!(zeros(length(s[:])), chunks, comb) for comb in Base.product(positions...))
+    i = intrng_indices(l)
+    chunks = [l[r] for r in intrng_indices(l)]
+    (overlay!(zeros(length(s[:])), chunks, comb) for
+        comb in Base.product(positions...))
 end
 
-function guess_matrices(s::NMR.Spectrum, lib::Vector{NMR.Spectrum})
+function guess_matrices(s::Spectrum, lib::Vector{Spectrum})
     gens = [cand_signals(s,l) for l in lib]
     indices = [i for i in eachindex(gens) if length(gens[i])>0]
     product_gens = Base.product([g for g in gens if length(g)>0]...)
@@ -54,10 +55,15 @@ function lsq_analyze(s::Vector{Float64}, l::Matrix{Float64})
     (soln,res)
 end
 
-function lsq_analyze(s::NMR.Spectrum, lib::Vector{NMR.Spectrum}, dark_areas::Vector{Tuple{Float64,Float64}} = Tuple{Float64,Float64}[])
+struct DecompositionResult
+    coefficients :: Vector{Float64}
+    refnums :: Vector{Int}
+end
+
+function lsq_analyze(s::Spectrum, lib::Vector{Spectrum}, dark_areas::Vector{Tuple{Float64,Float64}} = Tuple{Float64,Float64}[])
     sig = copy(s[:])
     for a in dark_areas
-        r = NMR.ppmtoindex(s,a[1]):NMR.ppmtoindex(s,a[2])
+        r = ppmtoindex(s,a[1]):ppmtoindex(s,a[2])
         sig[r] = 0.0
     end
     refnums, matrices = guess_matrices(s, lib)
@@ -66,9 +72,10 @@ function lsq_analyze(s::NMR.Spectrum, lib::Vector{NMR.Spectrum}, dark_areas::Vec
     for (i,m) in enumerate(matrices)
         if i==best
             recon = m*res[best][1]
-            residue = sig .- recon
-            components = res[best][1]'.*m
-            return (res[best], refnums, components, recon, residue)
+            #residue = sig .- recon
+            #components = res[best][1]'.*m
+            #return (res[best], refnums, components, recon, residue)
+            return DecompositionResult(res[best][1], refnums)
         end
     end
 end
