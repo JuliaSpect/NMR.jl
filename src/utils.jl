@@ -1,7 +1,15 @@
+using Interpolations
+import Interpolations: interpolate
+
 limits(s::Spectrum) = limits(s["O1P"], s["SW"], s["SF"], s["BF1"])
 limits(o1p, sw, sf, bf) = begin
     shift = 1e6(bf-sf)/bf
     (o1p - sw/2 + shift, o1p + sw/2 + shift)
+end
+
+function within(s::Spectrum, δ)
+    l,h = limits(s)
+    l < δ < h
 end
 
 function chemical_shifts(s::Spectrum)
@@ -29,7 +37,7 @@ end
 
 function ppmtoindex(s::Spectrum, δ)
     min_δ ,max_δ = limits(s)
-    Int(round((max_δ - δ)/(max_δ - min_δ) * s["SI"]))
+    Int(ceil((max_δ - δ)/(max_δ - min_δ) * s["SI"]))
 end
 
 function ppmtoindex(s::Spectrum, rng::Tuple{Float64,Float64})
@@ -43,6 +51,15 @@ end
 
 Base.length(s::Spectrum) = length(s[:])
 Base.length(p::ProcessedSpectrum) = length(p[:])
+
+function interpolate(s::Spectrum)
+    l,h = limits(s)
+    fn = extrapolate(interpolate(s[:], BSpline(Cubic(Natural())), OnGrid()), Flat())
+    scale(fn, linspace(l,h,length(s)))
+end
+
+freq_resolution(s::Spectrum) = s["SW"] / length(s)
+
 ### Pulse power profile
 
 """     powerprofile(pulse, dt, sfo1)
