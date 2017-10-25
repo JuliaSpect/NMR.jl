@@ -40,6 +40,7 @@ end
 Spectrum(fid :: Vector{Int32}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum) = Spectrum(fid, acqu, Dict(1=>proc), 1, "", "")
 
 include("bruker.jl")
+include("composition.jl")
 include("decomposition.jl")
 include("integration.jl")
 include("interpolation.jl")
