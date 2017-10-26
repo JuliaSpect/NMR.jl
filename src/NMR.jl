@@ -16,7 +16,7 @@ Base.getindex(p::ProcessedSpectrum, param::AbstractString) = p.params[param]
 Base.getindex(p::ProcessedSpectrum, ::Colon) = p.re_ft
 Base.getindex(p::ProcessedSpectrum, r::Range) = p.re_ft[r]
 
-struct Spectrum
+mutable struct Spectrum
     fid :: Vector{Int32}
     acqu :: Dict{AbstractString, Any}
     procs :: Dict{Int,ProcessedSpectrum}
@@ -40,6 +40,7 @@ Base.setindex!(s::Spectrum, d::AbstractArray, ::Colon) = (s[s.default_proc].re_f
 
 Spectrum(fid :: Vector{Int32}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum) = Spectrum(fid, acqu, Dict(1=>proc), 1, "", "")
 
+include("baseline.jl")
 include("bruker.jl")
 include("composition.jl")
 include("decomposition.jl")
