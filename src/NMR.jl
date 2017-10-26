@@ -36,6 +36,7 @@ function Base.getindex(s::Spectrum, param::AbstractString)
         s[s.default_proc][param]
     end
 end
+Base.setindex!(s::Spectrum, d::AbstractArray, ::Colon) = (s[s.default_proc].re_ft .= d)
 
 Spectrum(fid :: Vector{Int32}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum) = Spectrum(fid, acqu, Dict(1=>proc), 1, "", "")
 
