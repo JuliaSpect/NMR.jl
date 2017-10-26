@@ -1,3 +1,5 @@
+*.swp
+*.swo
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
