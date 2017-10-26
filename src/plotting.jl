@@ -8,6 +8,13 @@ plot(s::Spectrum; integrate = false, kw...) = begin
     if integrate == true
         integration_plot(s, 1)
     end
+    plot!(xflip=true, yticks=[], leg=false, grid=false, yforeground_color_axis=false; kw...)
+end
+
+function plot(spectra::AbstractArray{Spectrum}; kw...)
+    shifts = union_shifts(spectra)
+    labels = reshape([s.name for s in spectra], (1, length(spectra)))
+    plot(shifts, [resample(s, shifts) for s in spectra]; lab=labels, kw...)
     plot!(xflip=true, yticks=[], grid=false, yforeground_color_axis=false; kw...)
 end
 
