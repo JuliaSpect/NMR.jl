@@ -35,7 +35,11 @@ function read_params(file)
 end
 
 function read_intrng(file)
-    lines = readlines(file)
+    lines = try
+        readlines(file)
+    catch
+        return []
+    end
     if length(lines) > 2 && strip(lines[1])[1] == 'A'
         [tuple(map(float,split(line)[1:2])...) for line in lines[3:end]]
     elseif length(lines) > 1 && strip(lines[1])[1] == 'P'

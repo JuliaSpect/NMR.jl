@@ -22,6 +22,9 @@ end
 
 function integration_plot(s::Spectrum, refindex::Int)
     ints = integrate(s)
+    if length(ints)==0
+        return
+    end
     maxint = maximum(ints)
     maxpoint = maximum(maximum.(intrng_data(s)))
     scale = maxpoint/maxint
