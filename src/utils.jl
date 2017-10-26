@@ -1,6 +1,3 @@
-using Interpolations
-import Interpolations: interpolate
-
 limits(s::Spectrum) = limits(s["O1P"], s["SW"], s["SF"], s["BF1"])
 limits(o1p, sw, sf, bf) = begin
     shift = 1e6(bf-sf)/bf
@@ -49,13 +46,18 @@ function ppmtoindex(s::Spectrum, rng::Tuple{Float64,Float64})
     end
 end
 
+hztoindex(f, sw, sf, si) = Int(ceil(f/(sw*sf)*si))
+hztoindex(s::Spectrum, f) = hztoindex(f, s["SW"], s["SF"], s["SI"])
+
 Base.length(s::Spectrum) = length(s[:])
 Base.length(p::ProcessedSpectrum) = length(p[:])
 
-function interpolate(s::Spectrum)
-    l,h = limits(s)
-    fn = extrapolate(interpolate(s[:], BSpline(Cubic(Natural())), OnGrid()), Flat())
-    scale(fn, linspace(l,h,length(s)))
+function union_shifts(spectra::AbstractArray{Spectrum})
+    lims = [limits(s) for s in spectra]
+    l = minimum(lim[1] for lim in lims)
+    h = maximum(lim[2] for lim in lims)
+    res = minimum(freq_resolution(s) for s in spectra)
+    h:-res:l
 end
 
 freq_resolution(s::Spectrum) = s["SW"] / length(s)

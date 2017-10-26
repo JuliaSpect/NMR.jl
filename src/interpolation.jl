@@ -1,12 +1,16 @@
 # Continuous interpolation of discrete frequency-domain data
-
 using Interpolations
+import Interpolations: interpolate
 
-"""interpolate_spectrum(data, cs_range)"""
-function interpolate_spectrum(data, cs_range, options... = [BSpline(Cubic(Natural())), OnGrid()])
-    lo, hi = cs_range
-    N = length(data)
-    f = interpolate(data, options...)
-    # lo -> N, hi -> 1
-    d -> f[N - (d - lo)/(hi - lo)*(N - 1)]
+function interpolate(s::Spectrum)
+    l,h = limits(s)
+    fn = extrapolate(interpolate(s[:], BSpline(Cubic(Natural())), OnGrid()), Flat())
+    scaled = scale(fn, linspace(h,l,length(s)))
+    δ -> scaled[δ]
 end
+
+function resample(s::Spectrum, shifts::AbstractArray)
+    intp = interpolate(s)
+    intp.(shifts)
+end
+
