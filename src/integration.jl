@@ -12,11 +12,17 @@ function intrng_shifts(s::Spectrum)
     [linspace(i[1],i[2],ppmtoindex(s,i[2])-ppmtoindex(s,i[1])+1) for i in intrng]
 end
 
-function remove_rng(s::Spectrum, δ::Float64)
-    remove_rng(s[s.default_proc], δ)
+function remove_rng(sp::Union{Spectrum,ProcessedSpectrum}, δ::Float64)
+    t = deepcopy(sp)
+    remove_rng!(t, δ)
+    t
 end
 
-function remove_rng(p::ProcessedSpectrum, δ)
+function remove_rng!(s::Spectrum, δ::Float64)
+    remove_rng!(s[s.default_proc], δ)
+end
+
+function remove_rng!(p::ProcessedSpectrum, δ::Float64)
     for (i,(hi,lo)) in enumerate(p.intrng)
         if lo < δ < hi
             deleteat!(p.intrng, i)
