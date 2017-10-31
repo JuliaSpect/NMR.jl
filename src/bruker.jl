@@ -71,7 +71,7 @@ end
 ProcessedSpectrum(path::AbstractString) = ProcessedSpectrum(path, parse(Int, basename(path)))
 
 Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}, default_proc :: Int) = begin
-    fid = read_bruker_binary(joinpath(path, "fid"))
+    fid = float(read_bruker_binary(joinpath(path, "fid")))
     acqu = read_params(joinpath(path, "acqu"))
     name = basename(dirname(path))
     expno = parse(Int, basename(path))
