@@ -26,3 +26,10 @@ for op in (:+, :-, :*)
         end
     end
 end
+
+function copy!(src::Spectrum, dst::Spectrum, shift_rng::Tuple{Float64,Float64})
+    d = resample(src, chemical_shifts(dst))
+    rng = ppmtoindex(dst, shift_rng)
+    dst[rng] = d[rng]
+    dst
+end
