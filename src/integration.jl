@@ -29,7 +29,9 @@ function remove_rng(sp::Union{Spectrum,ProcessedSpectrum}, δ::Float64)
 end
 
 remove_rng!(s::Spectrum, δ::Float64) = remove_rng!(s[s.default_proc], δ)
-remove_rng!(p::ProcessedSpectrum, δ::Float64) = begin println(δ); deleteat!(p.intrng, find_rng(p, δ)) end
+remove_rng!(p::ProcessedSpectrum, δ::Float64) = remove_rng!(p, find_rng(p, δ))
+remove_rng!(p::ProcessedSpectrum, n::Int) = deleteat!(p.intrng, n)
+remove_rng!(p::ProcessedSpectrum, x::Void) = nothing
 
 integrate(v::Vector, r::Range) = sum(v[r])
 integrate(p::ProcessedSpectrum, r::Range) = integrate(p[:], r)
