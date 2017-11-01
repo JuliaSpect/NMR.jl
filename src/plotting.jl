@@ -14,7 +14,7 @@ end
 function plot(spectra::AbstractArray{Spectrum}; kw...)
     shifts = union_shifts(spectra)
     labels = reshape([s.name for s in spectra], (1, length(spectra)))
-    plot(shifts, [resample(s, shifts) for s in spectra]; lab=labels, kw...)
+    plot(shifts, [resample(s, shifts) for s in spectra]; lab=labels)
     plot!(xflip=true, yticks=[], grid=false, yforeground_color_axis=false; kw...)
 end
 
