@@ -41,7 +41,7 @@ function cand_signals(s::Spectrum, l::Spectrum)
         comb in Base.product(positions...))
 end
 
-function guess_matrices(s::Spectrum, lib::Vector{Spectrum})
+function guess_matrices(s::Spectrum, lib::Array{Spectrum,1})
     gens = [cand_signals(s,l) for l in lib]
     indices = [i for i in eachindex(gens) if length(gens[i])>0]
     product_gens = Base.product([g for g in gens if length(g)>0]...)
@@ -58,9 +58,11 @@ end
 struct DecompositionResult
     coefficients :: Vector{Float64}
     refnums :: Vector{Int}
+    signal :: Vector{Float64}
+    matrix :: Matrix{Float64}
 end
 
-function lsq_analyze(s::Spectrum, lib::Vector{Spectrum}, dark_areas::Vector{Tuple{Float64,Float64}} = Tuple{Float64,Float64}[])
+function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1}, dark_areas::Vector{Tuple{Float64,Float64}} = Tuple{Float64,Float64}[])
     sig = copy(s[:])
     for a in dark_areas
         r = ppmtoindex(s,a[1]):ppmtoindex(s,a[2])
@@ -71,11 +73,7 @@ function lsq_analyze(s::Spectrum, lib::Vector{Spectrum}, dark_areas::Vector{Tupl
     _,best = findmin(r[2] for r in res)
     for (i,m) in enumerate(matrices)
         if i==best
-            recon = m*res[best][1]
-            #residue = sig .- recon
-            #components = res[best][1]'.*m
-            #return (res[best], refnums, components, recon, residue)
-            return DecompositionResult(res[best][1], refnums)
+            return DecompositionResult(res[best][1], refnums, sig, m)
         end
     end
 end
