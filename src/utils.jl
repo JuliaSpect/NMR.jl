@@ -34,7 +34,7 @@ end
 
 function ppmtoindex(s::Spectrum, δ)
     min_δ ,max_δ = limits(s)
-    Int(ceil((max_δ - δ)/(max_δ - min_δ) * s["SI"]))
+    cld(s["SI"]*(max_δ - δ), (max_δ - min_δ))
 end
 
 function ppmtoindex(s::Spectrum, rng::Tuple{Float64,Float64})
@@ -46,7 +46,7 @@ function ppmtoindex(s::Spectrum, rng::Tuple{Float64,Float64})
     end
 end
 
-hztoindex(f, sw, sf, si) = Int(ceil(f/(sw*sf)*si))
+hztoindex(f, sw, sf, si) = cld(f*si, sw*sf)
 hztoindex(s::Spectrum, f) = hztoindex(f, s["SW"], s["SF"], s["SI"])
 
 Base.length(s::Spectrum) = length(s[:])
