@@ -11,7 +11,7 @@ struct ProcessedSpectrum
     intrng :: Vector{Tuple{Float64, Float64}}
     procno :: Int
 end
-
+Base.getindex(p::ProcessedSpectrum, n::Int) = p.intrng[n]
 Base.getindex(p::ProcessedSpectrum, param::AbstractString) = p.params[param]
 Base.getindex(p::ProcessedSpectrum, ::Colon) = p.re_ft
 Base.getindex(p::ProcessedSpectrum, r::Range) = p.re_ft[r]
