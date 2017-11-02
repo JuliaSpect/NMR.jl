@@ -1,14 +1,19 @@
 import Plots: plot, plot!, @colorant_str, annotate!, text, font
 using Formatting
 
+function plot_limits(s::NMR.Spectrum)
+    (minimum(minimum(d) for d in intrng_data(s)),
+     maximum(maximum(d) for d in intrng_data(s)))
+end
+
 plot(s::Spectrum; integrate = false, kw...) = begin
     lo,hi = limits(s)
     shifts = linspace(hi, lo, length(s))
-    p = plot(color=colorant"#0a3faa",shifts, s[:])
+    p = plot(shifts, s[:], framestyle=:box)
     if integrate == true
         integration_plot(s)
     end
-    plot!(xflip=true, yticks=[], leg=false, grid=false, yforeground_color_axis=false; kw...)
+    plot!(xflip=true, yticks=[], leg=false; kw...)
 end
 
 function plot(spectra::AbstractArray{Spectrum}; kw...)
