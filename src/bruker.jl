@@ -20,7 +20,9 @@ filters = [ ( Set(["SW", "O1", "SFO1", "SF", "BF1"]),
             ( Set(["D", "P"]),
               parse_float_list),
             ( Set(["PULPROG"]),
-              x -> strip(x)[2:end-1])
+              x -> strip(x)[2:end-1]),
+            ( Set(["AUTOPOS"]),
+              x -> parse(Int, strip(x)[2:end-1]))
 ]
 
 function read_params(file)
