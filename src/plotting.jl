@@ -1,9 +1,11 @@
 import Plots: plot, plot!, @colorant_str, annotate!, text, font
 using Formatting
 
-function plot_limits(s::NMR.Spectrum)
-    (minimum(minimum(d) for d in intrng_data(s)),
-     maximum(maximum(d) for d in intrng_data(s)))
+function plot_limits(s::NMR.Spectrum, margin = 0.05)
+    m, M = (minimum(minimum(d) for d in intrng_data(s)),
+            maximum(maximum(d) for d in intrng_data(s)))
+    Δ = M - m
+    (m - margin*Δ, M + margin * Δ)
 end
 
 plot(s::Spectrum; integrate = false, kw...) = begin
