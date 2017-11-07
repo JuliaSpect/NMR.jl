@@ -35,7 +35,6 @@ candidates(s::Spectrum, l::Spectrum, args...; kw...) =
 
 function cand_signals(s::Spectrum, l::Spectrum)
     positions = candidates(s, l)
-    i = intrng_indices(l)
     chunks = [l[r] for r in intrng_indices(l)]
     (overlay!(zeros(length(s[:])), chunks, comb) for
         comb in Base.product(positions...))
