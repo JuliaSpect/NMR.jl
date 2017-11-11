@@ -42,6 +42,10 @@ end
 
 function guess_matrices(s::Spectrum, lib::Array{Spectrum,1})
     gens = [cand_signals(s,l) for l in lib]
+    if sum(length(g) for g in gens) == 0
+        # no match found
+        return ([], [])
+    end
     indices = [i for i in eachindex(gens) if length(gens[i])>0]
     product_gens = Base.product([g for g in gens if length(g)>0]...)
     (indices, (hcat(p...) for p in product_gens))
@@ -68,6 +72,9 @@ function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1}, dark_areas::Vector{Tup
         sig[r] = 0.0
     end
     refnums, matrices = guess_matrices(s, lib)
+    if isempty(refnums)
+        return DecompositionResult([],[],[],Matrix{Float64}(0,0))
+    end
     res = vec(collect(lsq_analyze(sig, m) for m in matrices))
     _,best = findmin(r[2] for r in res)
     for (i,m) in enumerate(matrices)
