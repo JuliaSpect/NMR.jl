@@ -29,6 +29,7 @@ Base.getindex(s::Spectrum, i::Int) = s.procs[i]
 Base.getindex(s::Spectrum, ::Colon) = s.procs[s.default_proc].re_ft
 Base.getindex(s::Spectrum, r::Range) = s.procs[s.default_proc].re_ft[r]
 Base.getindex(s::Spectrum, rng::Tuple{Float64,Float64}) = s[ppmtoindex(s,rng)]
+Base.getindex(s::Spectrum, δ::Float64) = s[s.default_proc].re_ft[ppmtoindex(s, δ)]
 function Base.getindex(s::Spectrum, param::AbstractString)
     try
         s.acqu[param]
@@ -38,6 +39,7 @@ function Base.getindex(s::Spectrum, param::AbstractString)
 end
 Base.setindex!(s::Spectrum, d::AbstractArray, ::Colon) = (s[s.default_proc].re_ft .= d)
 Base.setindex!(s::Spectrum, d::AbstractArray, r::Range) = (s[s.default_proc].re_ft[r] .= d)
+Base.setindex!(s::Spectrum, d, rng::Tuple{Float64, Float64}) = (s[s.default_proc].re_ft[ppmtoindex(s,rng)]=d)
 
 Spectrum(fid :: Vector{Float64}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum) = Spectrum(fid, acqu, Dict(1=>proc), 1, "", "")
 
