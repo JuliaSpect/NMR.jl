@@ -64,9 +64,9 @@ function ProcessedSpectrum(path :: AbstractString, procno :: Int)
     re_ft = float(read_bruker_binary(joinpath(path, "1r")))
     im_ft = float(read_bruker_binary(joinpath(path, "1i")))
     params = read_params(joinpath(path, "proc"))
-    params["TITLE"] = readstring(joinpath(path, "title"))
+    title = readstring(joinpath(path, "title"))
     intrng = read_intrng(joinpath(path, "intrng"))
-    ProcessedSpectrum(re_ft, im_ft, params, intrng, procno)
+    ProcessedSpectrum(re_ft, im_ft, params, intrng, procno, title)
 end
 
 ProcessedSpectrum(path::AbstractString) = ProcessedSpectrum(path, parse(Int, basename(path)))
@@ -81,7 +81,6 @@ Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}, default_proc :: 
         proc_path = joinpath(path, "pdata", string(procno))
         procs[procno] = ProcessedSpectrum(proc_path, procno)
     end
-    acqu["TITLE"] = procs[default_proc].params["TITLE"] # Much more useful
     Spectrum(fid, acqu, procs, default_proc, name, expno)
 end
 

@@ -12,6 +12,7 @@ struct ProcessedSpectrum
     params :: Dict{String, Any}
     intrng :: Array{Intrng,1}
     procno :: Int
+    title :: String
 end
 Base.getindex(p::ProcessedSpectrum, n::Int) = p.intrng[n]
 Base.getindex(p::ProcessedSpectrum, param::AbstractString) = p.params[param]

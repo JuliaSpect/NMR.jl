@@ -23,6 +23,8 @@ function dump(path, s::Spectrum)
 
     # Save fid
     write(open(joinpath(path,"fid"), "w"), Int32.(round.(s.fid)))
+
+    # TODO: Save acqu/acqus
 end
 
 function dump(path, s::Spectrum, templatepath)
@@ -48,6 +50,5 @@ function dump(path, p::ProcessedSpectrum)
         show(f, p.intrng)
     end
 
-    # Save proc
-
+    # TODO: Save proc/procs
 end

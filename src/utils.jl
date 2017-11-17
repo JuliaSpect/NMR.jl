@@ -62,6 +62,8 @@ end
 
 freq_resolution(s::Spectrum) = s["SW"] / length(s)
 
+title(s::Spectrum) = s[s.default_proc].title
+
 ### Pulse power profile
 
 """     powerprofile(pulse, dt, sfo1)
