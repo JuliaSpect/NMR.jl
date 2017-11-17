@@ -60,7 +60,6 @@ function parse_param(param, val)
     return strip(val)
 end
 
-
 function ProcessedSpectrum(path :: AbstractString, procno :: Int)
     re_ft = float(read_bruker_binary(joinpath(path, "1r")))
     im_ft = float(read_bruker_binary(joinpath(path, "1i")))
