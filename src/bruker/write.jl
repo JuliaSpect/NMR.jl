@@ -18,7 +18,7 @@ function dump(path, s::Spectrum)
 
     # Save each child proc
     for (n,p) in s.procs
-        dump(joinpath(path, string(n)))
+        dump(joinpath(path, "pdata", string(n)), p)
     end
 
     # Save fid
@@ -29,7 +29,7 @@ end
 
 function dump(path, s::Spectrum, templatepath)
     cp(templatepath, path)
-    dump(path, s)    
+    dump(path, s)
 end
 
 function dump(path, p::ProcessedSpectrum)
@@ -48,6 +48,11 @@ function dump(path, p::ProcessedSpectrum)
     # Save intrng
     open(joinpath(path, "intrng"), "w") do f
         show(f, p.intrng)
+    end
+
+    # Save title
+    open(joinpath(path, "title"), "w") do f
+        write(f, p.title)
     end
 
     # TODO: Save proc/procs
