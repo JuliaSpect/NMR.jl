@@ -6,7 +6,7 @@ export Spectrum, ProcessedSpectrum, plot, plot!
 
 const Intrng = Tuple{Float64, Float64}
 
-struct ProcessedSpectrum
+mutable struct ProcessedSpectrum
     re_ft :: Vector{Float64}
     im_ft :: Vector{Float64}
     params :: Dict{String, Any}

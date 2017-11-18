@@ -64,6 +64,20 @@ freq_resolution(s::Spectrum) = s["SW"] / length(s)
 
 title(s::Spectrum) = s[s.default_proc].title
 
+# Returns a copy of s with all but the given
+# range zeroed out. The default proc for s will
+# have its intrng adjusted to Δ as well.
+function extract(s::Spectrum, Δ::Intrng)
+    res = deepcopy(s)
+    rng = ppmtoindex(s, Δ)
+    res[res.default_proc].re_ft = zeros(length(s))
+    res[res.default_proc].re_ft[rng] .+= s[s.default_proc].re_ft[rng]
+    res[res.default_proc].im_ft = s[s.default_proc].im_ft[rng]
+    res[res.default_proc].intrng = [Δ]
+    # TODO: update fid?    
+    res
+end
+
 ### Pulse power profile
 
 """     powerprofile(pulse, dt, sfo1)
