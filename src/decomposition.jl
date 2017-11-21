@@ -16,7 +16,12 @@ end
 function candidates(signal, chunk, start_pos; tol = 75)
     l = length(chunk)
     positions = (-tol+start_pos):(tol+start_pos)
-    s = normalize(signal[(-tol+start_pos):(tol+start_pos+l-1)])
+    s = signal[(-tol+start_pos):(tol+start_pos+l-1)]
+    # reject weak signals, important if signal only contains noise
+    if norm(s)/norm(chunk) < 0.01
+        return []
+    end
+    normalize!(s)
     c = normalize(chunk)
     corr = zeros(tol*2+1)
     for i in eachindex(corr)
