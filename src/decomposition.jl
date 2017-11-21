@@ -13,7 +13,7 @@ function overlay!(signal, chunks, positions)
 end
 
 
-function candidates(signal, chunk, start_pos; tol = 125)
+function candidates(signal, chunk, start_pos; tol = 75)
     l = length(chunk)
     positions = (-tol+start_pos):(tol+start_pos)
     s = normalize(signal[(-tol+start_pos):(tol+start_pos+l-1)])
@@ -23,9 +23,8 @@ function candidates(signal, chunk, start_pos; tol = 125)
         corr[i] = sum(c.*s[i:(i+l-1)])
     end
     cl = length(corr)
-    [positions[i] for i in eachindex(positions) 
-        if corr[i]>0.2 && (i==cl || corr[i] > corr[i+1]) && 
-                          (i==1 || corr[i] > corr[i-1])]
+    [positions[i] for i in 2:(cl-1)
+        if corr[i]>0.2 && (corr[i] > corr[i+1]) && (corr[i] > corr[i-1])]
 end
  
 candidates(s::Spectrum, args...; kw...) = candidates(s[:],args...;kw...)
