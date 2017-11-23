@@ -69,12 +69,12 @@ struct DecompositionResult
     matrix :: Matrix{Float64}
 end
 
-function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1}, dark_areas::Vector{Tuple{Float64,Float64}} = Tuple{Float64,Float64}[])
-    sig = copy(s[:])
-    for a in dark_areas
-        r = ppmtoindex(s,a[1]):ppmtoindex(s,a[2])
-        sig[r] = 0.0
-    end
+function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1})
+    sig = s[:]
+    # for a in dark_areas
+    #     r = ppmtoindex(s,a[1]):ppmtoindex(s,a[2])
+    #     sig[r] = 0.0
+    # end
     refnums, matrices = guess_matrices(s, lib)
     if isempty(refnums)
         return DecompositionResult([],[],[],Matrix{Float64}(0,0))
@@ -86,4 +86,11 @@ function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1}, dark_areas::Vector{Tup
             return DecompositionResult(res[best][1], refnums, sig, m)
         end
     end
+end
+
+function decompose(d::DecompositionResult)
+    recon = d.matrix * d.coefficients
+    residue = d.signal .- recon
+    components = d.coefficients'.*d.matrix
+    (components, recon, residue)
 end
