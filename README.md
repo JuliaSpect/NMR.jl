@@ -26,12 +26,13 @@ plot(s)
 * Signal integration and integral display
 * Utility functions for plotting with
   [Plots.jl](https://github.com/JuliaPlots/Plots.jl)
-* Least squares signal decomposition
+* Least squares signal decomposition with independent alignment of integration ranges
 
 ## TODO
 * Peak detection
 * Window functions
 * Automatic phase correction
+* Varian, JEOL, etc. I/O
 
 ## Authors
 * [S. Hessam M. Mehr](https://hessammehr.github.io) ([github](https://github.com/hessammehr))
