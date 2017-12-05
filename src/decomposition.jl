@@ -13,12 +13,12 @@ function overlay!(signal, chunks, positions)
 end
 
 
-function candidates(signal, chunk, start_pos; tol = 75)
+function candidates(signal, chunk, start_pos; tol = 125)
     l = length(chunk)
     positions = (-tol+start_pos):(tol+start_pos)
     s = signal[(-tol+start_pos):(tol+start_pos+l-1)]
     # reject weak signals, important if signal only contains noise
-    if norm(s)/norm(chunk) < 0.01
+    if norm(s)/norm(chunk) < 0.05
         return []
     end
     normalize!(s)
