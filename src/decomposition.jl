@@ -13,16 +13,15 @@ function overlay!(signal, chunks, positions)
 end
 
 
-function candidates(signal, chunk, start_pos; tol = 125)
+function candidates(signal, chunk, start_pos; tol = 200)
     l = length(chunk)
     positions = (-tol+start_pos):(tol+start_pos)
-    s = signal[(-tol+start_pos):(tol+start_pos+l-1)]
+    s = vcat(zeros(tol),signal[start_pos:start_pos+l-1],zeros(tol))
     # reject weak signals, important if signal only contains noise
     if norm(s)/norm(chunk) < 0.05
         return []
     end
-    # only normalize by the core part of signal
-    s ./= norm(signal[start_pos:start_pos+l-1])
+    normalize!(s)
     c = normalize(chunk)
     corr = zeros(tol*2+1)
     for i in eachindex(corr)
@@ -30,7 +29,8 @@ function candidates(signal, chunk, start_pos; tol = 125)
     end
     cl = length(corr)
     # good debug hook
-    # println(maximum(corr))
+    # Gaussian window to favor smaller shifts
+    corr .*= exp.(-2(-tol:tol).^2./tol^2)
     [positions[i] for i in 2:(cl-1)
         if corr[i]>0.3 && (corr[i] > corr[i+1]) && (corr[i] > corr[i-1])]
 end
