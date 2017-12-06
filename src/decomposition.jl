@@ -21,15 +21,18 @@ function candidates(signal, chunk, start_pos; tol = 125)
     if norm(s)/norm(chunk) < 0.05
         return []
     end
-    normalize!(s)
+    # only normalize by the core part of signal
+    s ./= norm(signal[start_pos:start_pos+l-1])
     c = normalize(chunk)
     corr = zeros(tol*2+1)
     for i in eachindex(corr)
         corr[i] = sum(c.*s[i:(i+l-1)])
     end
     cl = length(corr)
+    # good debug hook
+    # println(maximum(corr))
     [positions[i] for i in 2:(cl-1)
-        if corr[i]>0.2 && (corr[i] > corr[i+1]) && (corr[i] > corr[i-1])]
+        if corr[i]>0.3 && (corr[i] > corr[i+1]) && (corr[i] > corr[i-1])]
 end
  
 candidates(s::Spectrum, args...; kw...) = candidates(s[:],args...;kw...)
