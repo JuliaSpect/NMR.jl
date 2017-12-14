@@ -73,21 +73,39 @@ struct DecompositionResult
 end
 
 function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1})
-    sig = s[:]
+    found = Int[]
+    coeffs = Float64[]
+    vecs = Float64[]
+    ss = deepcopy(s)
+    sig = ss[:]
+    # sig = s[:]
     # for a in dark_areas
     #     r = ppmtoindex(s,a[1]):ppmtoindex(s,a[2])
     #     sig[r] = 0.0
     # end
-    refnums, matrices = guess_matrices(s, lib)
-    if isempty(refnums)
-        return DecompositionResult([],[],[],Matrix{Float64}(0,0))
-    end
-    res = vec(collect(lsq_analyze(sig, m) for m in matrices))
-    _,best = findmin(r[2] for r in res)
-    for (i,m) in enumerate(matrices)
-        if i==best
-            return DecompositionResult(res[best][1], refnums, sig, m)
+    while true
+        refnums, matrices = guess_matrices(ss, lib)
+        if issubset(refnums, found)
+            return DecompositionResult(coeffs,found,s[:],
+                                       isempty(vecs)?Matrix{Float64}(0,0):reshape(vecs,(:,length(found))))
         end
+        res = vec(collect(lsq_analyze(sig, m) for m in matrices))
+        _,best = findmin(r[2] for r in res)
+        for (i,m) in enumerate(matrices)
+            if i==best
+                # return DecompositionResult(res[best][1], refnums, sig, m)
+                for (j,r) in enumerate(refnums)
+                    if r ∉ found
+                        sig .-= m[:,j] .* res[i][1][j]
+                        append!(coeffs, res[i][1][j])
+                        append!(found, r)
+                        append!(vecs, m[:,j])
+                        break
+                    end
+                end
+            end
+        end
+        ss[:] = sig
     end
 end
 
