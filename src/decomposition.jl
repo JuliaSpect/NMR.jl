@@ -13,7 +13,7 @@ function overlay!(signal, chunks, positions)
 end
 
 
-function candidates(signal, chunk, start_pos; tol = 200)
+function candidates(signal, chunk, start_pos; tol = 250)
     l = length(chunk)
     positions = (-tol+start_pos):(tol+start_pos)
     s = vcat(zeros(tol),signal[start_pos:start_pos+l-1],zeros(tol))
@@ -30,9 +30,10 @@ function candidates(signal, chunk, start_pos; tol = 200)
     cl = length(corr)
     # good debug hook
     # Gaussian window to favor smaller shifts
-    corr .*= exp.(-2(-tol:tol).^2./tol^2)
-    [positions[i] for i in 2:(cl-1)
-        if corr[i]>0.3 && (corr[i] > corr[i+1]) && (corr[i] > corr[i-1])]
+    # corr .*= exp.(-(-tol:tol).^2./tol^2)
+    # println(corr)
+    [positions[i] for i in 1:cl
+        if corr[i]>0.8 && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
 end
  
 candidates(s::Spectrum, args...; kw...) = candidates(s[:],args...;kw...)
@@ -85,24 +86,29 @@ function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1})
     # end
     while true
         refnums, matrices = guess_matrices(ss, lib)
+        println("Forming $(length(matrices)) matrices")
         if issubset(refnums, found)
             return DecompositionResult(coeffs,found,s[:],
                                        isempty(vecs)?Matrix{Float64}(0,0):reshape(vecs,(:,length(found))))
         end
         res = vec(collect(lsq_analyze(sig, m) for m in matrices))
         _,best = findmin(r[2] for r in res)
+        _,max_component = findmax(res[best][1]) # Largest constituent
         for (i,m) in enumerate(matrices)
             if i==best
                 # return DecompositionResult(res[best][1], refnums, sig, m)
-                for (j,r) in enumerate(refnums)
-                    if r ∉ found
-                        sig .-= m[:,j] .* res[i][1][j]
-                        append!(coeffs, res[i][1][j])
-                        append!(found, r)
-                        append!(vecs, m[:,j])
-                        break
-                    end
+                # for (j,r) in enumerate(refnums)
+                r = refnums[max_component]
+                    # println("j: $j, max_component: $max_component")
+                sig .-= m[:,max_component] .* res[i][1][max_component]
+                println("Found: $r")
+                if r ∉ found
+                    append!(coeffs, res[i][1][max_component])
+                    append!(found, r)
+                    append!(vecs, m[:,max_component])
                 end
+                break
+                # end
             end
         end
         ss[:] = sig
