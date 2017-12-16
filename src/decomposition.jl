@@ -1,3 +1,5 @@
+const CORR_THRESHOLDS = collect(0.9:-0.2:0.1)
+
 """
     overlay!(signal, chunks, positions)
 
@@ -13,7 +15,8 @@ function overlay!(signal, chunks, positions)
 end
 
 
-function candidates(signal, chunk, start_pos; tol = 250)
+function candidates(signal, chunk, start_pos; tol = 250, mincorr = 0.8)
+    # println(mincorr)
     l = length(chunk)
     positions = (-tol+start_pos):(tol+start_pos)
     s = vcat(zeros(tol),signal[start_pos:start_pos+l-1],zeros(tol))
@@ -33,7 +36,7 @@ function candidates(signal, chunk, start_pos; tol = 250)
     # corr .*= exp.(-(-tol:tol).^2./tol^2)
     # println(corr)
     [positions[i] for i in 1:cl
-        if corr[i]>0.8 && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
+        if corr[i]>mincorr && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
 end
  
 candidates(s::Spectrum, args...; kw...) = candidates(s[:],args...;kw...)
@@ -41,21 +44,22 @@ candidates(s::Spectrum, l::Spectrum, args...; kw...) =
     [ candidates(s[:], l[r], r.start, args...; kw...) for r in intrng_indices(l) ]
 
 
-function cand_signals(s::Spectrum, l::Spectrum)
-    positions = candidates(s, l)
+function cand_signals(s::Spectrum, l::Spectrum; kw...)
+    positions = candidates(s, l; kw...)
     chunks = [l[r] for r in intrng_indices(l)]
     (overlay!(zeros(length(s[:])), chunks, comb) for
         comb in Base.product(positions...))
 end
 
-function guess_matrices(s::Spectrum, lib::Array{Spectrum,1})
-    gens = [cand_signals(s,l) for l in lib]
-    if sum(length(g) for g in gens) == 0
+function guess_matrices(s::Spectrum, lib::Array{Spectrum,1}; exclude = [], kw...)
+    gens = [cand_signals(s,l; kw...) for l in lib]
+    indices = [i for i in eachindex(gens) if length(gens[i])>0 && i ∉ exclude]
+    if isempty(indices)
         # no match found
         return ([], [])
     end
-    indices = [i for i in eachindex(gens) if length(gens[i])>0]
-    product_gens = Base.product([g for g in gens if length(g)>0]...)
+    # product_gens = Base.product([g for g in gens if length(g)>0]...)
+    product_gens = Base.product(gens[indices]...)
     (indices, (hcat(p...) for p in product_gens))
 end
 
@@ -76,6 +80,8 @@ end
 function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1})
     found = Int[]
     coeffs = Float64[]
+    mincorrs = CORR_THRESHOLDS[:]
+    mincorr = shift!(mincorrs)
     vecs = Float64[]
     ss = deepcopy(s)
     sig = ss[:]
@@ -85,27 +91,33 @@ function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1})
     #     sig[r] = 0.0
     # end
     while true
-        refnums, matrices = guess_matrices(ss, lib)
-        println("Forming $(length(matrices)) matrices")
+        refnums, matrices = guess_matrices(ss, lib; mincorr = mincorr, exclude=found)
+        println("Forming $(length(matrices)) matrices (correlation threshold = $mincorr)")
         if issubset(refnums, found)
-            return DecompositionResult(coeffs,found,s[:],
-                                       isempty(vecs)?Matrix{Float64}(0,0):reshape(vecs,(:,length(found))))
+            if isempty(mincorrs)
+                return DecompositionResult(coeffs,found,s[:],
+                                           isempty(vecs)?Matrix{Float64}(0,0):reshape(vecs,(:,length(found))))
+            else
+                mincorr = shift!(mincorrs)
+                continue
+            end
         end
         res = vec(collect(lsq_analyze(sig, m) for m in matrices))
         _,best = findmin(r[2] for r in res)
-        _,max_component = findmax(res[best][1]) # Largest constituent
+        # _,max_component = findmax(res[best][1]) # Largest constituent
         for (i,m) in enumerate(matrices)
             if i==best
                 # return DecompositionResult(res[best][1], refnums, sig, m)
-                # for (j,r) in enumerate(refnums)
-                r = refnums[max_component]
+                for (j,r) in enumerate(refnums)
+                # r = refnums[max_component]
                     # println("j: $j, max_component: $max_component")
-                sig .-= m[:,max_component] .* res[i][1][max_component]
-                println("Found: $r")
-                if r ∉ found
-                    append!(coeffs, res[i][1][max_component])
-                    append!(found, r)
-                    append!(vecs, m[:,max_component])
+                    sig .-= m[:,j] .* res[i][1][j]
+                    println("Found: $r")
+                    if r ∉ found
+                        append!(coeffs, res[i][1][j])
+                        append!(found, r)
+                        append!(vecs, m[:,j])
+                    end
                 end
                 break
                 # end
