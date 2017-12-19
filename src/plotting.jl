@@ -8,6 +8,12 @@ function plot_limits(s::NMR.Spectrum, margin = 0.05)
     (m - margin*Δ, M + margin * Δ)
 end
 
+function plot_limits(a::Array{Float64,1}, margin = 0.05)
+    m, M = extrema(a)
+    Δ = M - m
+    (m - margin*Δ, M + margin * Δ)
+end
+
 plot(s::Spectrum; integrate = false, kw...) = begin
     lo,hi = limits(s)
     shifts = linspace(hi, lo, length(s))
