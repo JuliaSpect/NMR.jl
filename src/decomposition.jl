@@ -21,7 +21,7 @@ function candidates(signal, chunk, start_pos; tol = 250, mincorr = 0.8)
     positions = (-tol+start_pos):(tol+start_pos)
     s = vcat(zeros(tol),signal[start_pos:start_pos+l-1],zeros(tol))
     # reject weak signals, important if signal only contains noise
-    if norm(s)/norm(chunk) < 0.05
+    if norm(s,1)/norm(chunk,1) < 0.02
         return []
     end
     normalize!(s)
@@ -112,7 +112,7 @@ function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1})
                 # r = refnums[max_component]
                     # println("j: $j, max_component: $max_component")
                     sig .-= m[:,j] .* res[i][1][j]
-                    println("Found: $r")
+                    println("Found: #$r")
                     if r ∉ found
                         append!(coeffs, res[i][1][j])
                         append!(found, r)
