@@ -1,4 +1,4 @@
-const CORR_THRESHOLDS = collect(0.9:-0.2:0.1)
+const CORR_THRESHOLDS = [0.9,0.7,0.5,0.3,0.2,0.15,0.1]
 
 """
     overlay!(signal, chunks, positions)
@@ -15,13 +15,20 @@ function overlay!(signal, chunks, positions)
 end
 
 
-function candidates(signal, chunk, start_pos; tol = 250, mincorr = 0.8)
+function candidates(signal, chunk, start_pos; tol = 250, minsig=mean(signal), mincorr = 0.8)
     # println(mincorr)
     l = length(chunk)
     positions = (-tol+start_pos):(tol+start_pos)
     s = vcat(zeros(tol),signal[start_pos:start_pos+l-1],zeros(tol))
     # reject weak signals, important if signal only contains noise
-    if norm(s,1)/norm(chunk,1) < 0.02
+    # if norm(s,1)/norm(chunk,1) < 0.04
+    #     return []
+    # end
+    
+    # if norm(s,1)/norm(signal,1) < 0.005
+    #     return []
+    # end
+    if mean(s) < minsig
         return []
     end
     normalize!(s)
@@ -32,11 +39,12 @@ function candidates(signal, chunk, start_pos; tol = 250, mincorr = 0.8)
     end
     cl = length(corr)
     # good debug hook
-    # Gaussian window to favor smaller shifts
-    # corr .*= exp.(-(-tol:tol).^2./tol^2)
     # println(corr)
-    [positions[i] for i in 1:cl
-        if corr[i]>mincorr && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
+    # out = [positions[i] for i in 1:cl
+    #     if corr[i]>mincorr && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
+    inds = [i for i in 1:cl if corr[i]>mincorr && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
+    sort!(inds, by=i->corr[i],rev=true)
+    positions[inds[1:min(length(inds),3)]]
 end
  
 candidates(s::Spectrum, args...; kw...) = candidates(s[:],args...;kw...)
@@ -85,13 +93,9 @@ function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1})
     vecs = Float64[]
     ss = deepcopy(s)
     sig = ss[:]
-    # sig = s[:]
-    # for a in dark_areas
-    #     r = ppmtoindex(s,a[1]):ppmtoindex(s,a[2])
-    #     sig[r] = 0.0
-    # end
+    ms = mean(sig)
     while true
-        refnums, matrices = guess_matrices(ss, lib; mincorr = mincorr, exclude=found)
+        refnums, matrices = guess_matrices(ss, lib; minsig=0.05ms, mincorr = mincorr, exclude=found)
         println("Forming $(length(matrices)) matrices (correlation threshold = $mincorr)")
         if issubset(refnums, found)
             if isempty(mincorrs)
@@ -128,6 +132,9 @@ function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1})
 end
 
 function decompose(d::DecompositionResult)
+    if isempty(d.coefficients)
+        return ([],zeros(length(d.signal)), d.signal)
+    end
     recon = d.matrix * d.coefficients
     residue = d.signal .- recon
     components = d.coefficients'.*d.matrix
