@@ -1,5 +1,6 @@
-const CORR_THRESHOLDS = [0.9,0.7,0.5,0.3,0.2,0.15,0.1]
-
+const CORR_THRESHOLDS = [0.9,0.7,0.6,0.5,0.3,0.2,0.15,0.1]
+const MINFACT = 0.05
+const MINCORR = 0.8 # reasonable default
 """
     overlay!(signal, chunks, positions)
 
@@ -15,7 +16,7 @@ function overlay!(signal, chunks, positions)
 end
 
 
-function candidates(signal, chunk, start_pos; tol = 250, minsig=mean(signal), mincorr = 0.8)
+function candidates(signal, chunk, start_pos; tol = 250, avg=mean(signal), minfact=MINFACT, mincorr = 0.8)
     # println(mincorr)
     l = length(chunk)
     positions = (-tol+start_pos):(tol+start_pos)
@@ -28,8 +29,9 @@ function candidates(signal, chunk, start_pos; tol = 250, minsig=mean(signal), mi
     # if norm(s,1)/norm(signal,1) < 0.005
     #     return []
     # end
+    minsig = avg*minfact
     if mean(s) < minsig
-        return []
+        return Int64[]
     end
     normalize!(s)
     c = normalize(chunk)
@@ -44,7 +46,7 @@ function candidates(signal, chunk, start_pos; tol = 250, minsig=mean(signal), mi
     #     if corr[i]>mincorr && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
     inds = [i for i in 1:cl if corr[i]>mincorr && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
     sort!(inds, by=i->corr[i],rev=true)
-    positions[inds[1:min(length(inds),3)]]
+    positions[inds[1:min(length(inds),2)]]
 end
  
 candidates(s::Spectrum, args...; kw...) = candidates(s[:],args...;kw...)
@@ -59,8 +61,9 @@ function cand_signals(s::Spectrum, l::Spectrum; kw...)
         comb in Base.product(positions...))
 end
 
-function guess_matrices(s::Spectrum, lib::Array{Spectrum,1}; exclude = [], kw...)
-    gens = [cand_signals(s,l; kw...) for l in lib]
+function guess_matrices(s::Spectrum, lib::Array{Spectrum,1}; exclude = [], minfact=fill(MINFACT, length(lib)), kw...)
+    # println("""Ratio factors: $(join(minfact, ", "))""")
+    gens = [cand_signals(s,l; minfact=minfact[i], kw...) for (i,l) in enumerate(lib)]
     indices = [i for i in eachindex(gens) if length(gens[i])>0 && i ∉ exclude]
     if isempty(indices)
         # no match found
@@ -85,7 +88,7 @@ struct DecompositionResult
     matrix :: Matrix{Float64}
 end
 
-function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1})
+function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1}; kw...)
     found = Int[]
     coeffs = Float64[]
     mincorrs = CORR_THRESHOLDS[:]
@@ -94,8 +97,9 @@ function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1})
     ss = deepcopy(s)
     sig = ss[:]
     ms = mean(sig)
+    println("Signal mean: $ms")
     while true
-        refnums, matrices = guess_matrices(ss, lib; minsig=0.05ms, mincorr = mincorr, exclude=found)
+        refnums, matrices = guess_matrices(ss, lib; avg=ms, mincorr = mincorr, exclude=found, kw...)
         println("Forming $(length(matrices)) matrices (correlation threshold = $mincorr)")
         if issubset(refnums, found)
             if isempty(mincorrs)

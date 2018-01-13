@@ -1,5 +1,3 @@
-#using Interpolations
-
 import Base: +, -, *, /
 
 for op in (:*, :/)
