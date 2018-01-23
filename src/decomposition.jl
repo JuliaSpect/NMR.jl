@@ -54,16 +54,21 @@ candidates(s::Spectrum, l::Spectrum, args...; kw...) =
     [ candidates(s[:], l[r], r.start, args...; kw...) for r in intrng_indices(l) ]
 
 
-function cand_signals(s::Spectrum, l::Spectrum; kw...)
+function cand_signals(s::Spectrum, l::Spectrum; sloppiness=0, kw...)
     positions = candidates(s, l; kw...)
-    chunks = [l[r] for r in intrng_indices(l)]
+    matched = filter(p->!isempty(p), positions)
+    if length(matched) == 0 ||  length(positions) - length(matched) > sloppiness
+        return []
+    end
+    chunks = [l[r] for (i,r) in enumerate(intrng_indices(l)) if !isempty(positions[i])]
     (overlay!(zeros(length(s[:])), chunks, comb) for
-        comb in Base.product(positions...))
+        comb in Base.product(matched...))
 end
 
-function guess_matrices(s::Spectrum, lib::Array{Spectrum,1}; exclude = [], minfact=fill(MINFACT, length(lib)), kw...)
+function guess_matrices(s::Spectrum, lib::Array{Spectrum,1}; exclude = [], minfact=fill(MINFACT, length(lib)), sloppiness=Dict(), kw...)
     # println("""Ratio factors: $(join(minfact, ", "))""")
-    gens = [cand_signals(s,l; minfact=minfact[i], kw...) for (i,l) in enumerate(lib)]
+    sk = keys(sloppiness)
+    gens = [cand_signals(s,l; minfact=minfact[i], sloppiness=get(sloppiness,i,0), kw...) for (i,l) in enumerate(lib)]
     indices = [i for i in eachindex(gens) if length(gens[i])>0 && i ∉ exclude]
     if isempty(indices)
         # no match found
