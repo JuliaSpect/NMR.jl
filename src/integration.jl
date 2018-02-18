@@ -1,6 +1,8 @@
+intrng(s::Spectrum) = s[s.default_proc].intrng
+
 function intrng_indices(s::Spectrum)
-    intrng = s[s.default_proc].intrng
-    [ppmtoindex(s,i[1]):ppmtoindex(s,i[2]) for i in intrng]
+    rng = intrng(s)
+    [ppmtoindex(s,i[1]):ppmtoindex(s,i[2]) for i in rng]
 end
 
 function intrng_data(s::Spectrum)
@@ -8,8 +10,8 @@ function intrng_data(s::Spectrum)
 end
 
 function intrng_shifts(s::Spectrum) 
-    intrng = s[s.default_proc].intrng
-    [linspace(i[1],i[2],ppmtoindex(s,i[2])-ppmtoindex(s,i[1])+1) for i in intrng]
+    rng = intrng(s)
+    [linspace(i[1],i[2],ppmtoindex(s,i[2])-ppmtoindex(s,i[1])+1) for i in rng]
 end
 
 function find_rng(p::ProcessedSpectrum, δ::Float64)
@@ -44,11 +46,11 @@ function integrate(s::Spectrum, ppm_range::Tuple{Float64,Float64})
 end
 
 function integrate(s::Spectrum)
-    [integrate(s, r) for r in s[s.default_proc].intrng]
+    [integrate(s, r) for r in intrng(s)]
 end
 
 function integrate(s::Spectrum, ref_rng::Int)
-    rngs = s[s.default_proc].intrng
+    rngs = intrng(s)
     ref_int = integrate(s, rngs[ref_rng])
     integrate(s)./ref_int
 end
