@@ -49,15 +49,15 @@ function integration_plot(s::Spectrum, labels::AbstractArray{T}) where T <: Abst
     maxpoint = maximum(maximum.(intrng_data(s)))
     scale = maxpoint/maxint
     shifts = intrng_shifts(s)
-    plot!(shifts, [integral_curve(s[ppmtoindex(s,r)], scale) for r in s[s.default_proc].intrng], color=:red, linewidth=1.5, legend=false)
+    plot!(shifts, [integral_curve(s[ppmtoindex(s,r)], scale) for r in intrng(s)], color=:red, linewidth=1.5, legend=false)
     annotation_height = -0.2maxpoint
-    for (i,r) in enumerate(s[s.default_proc].intrng)
+    for (i,r) in enumerate(intrng(s))
         annotate!([(mean(r), annotation_height, text(labels[i], font(10,90.0,colorant"red")))])
     end
 end
 
 function integration_plot(s::Spectrum)
-    n = length(s[s.default_proc].intrng)
+    n = length(intrng(s))
     labels = collect(string(c) for c in 'a':('a'+n-1))
     integration_plot(s, labels)
 end
