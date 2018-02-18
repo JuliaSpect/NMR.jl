@@ -17,18 +17,11 @@ end
 
 
 function candidates(signal, chunk, start_pos; tol = 250, avg=mean(signal), minfact=MINFACT, mincorr = 0.8)
-    # println(mincorr)
     l = length(chunk)
     positions = (-tol+start_pos):(tol+start_pos)
     s = vcat(zeros(tol),signal[start_pos:start_pos+l-1],zeros(tol))
-    # reject weak signals, important if signal only contains noise
-    # if norm(s,1)/norm(chunk,1) < 0.04
-    #     return []
-    # end
     
-    # if norm(s,1)/norm(signal,1) < 0.005
-    #     return []
-    # end
+    # reject weak signals, important if signal only contains noise
     minsig = avg*minfact
     if mean(s) < minsig
         return Int64[]
@@ -42,8 +35,6 @@ function candidates(signal, chunk, start_pos; tol = 250, avg=mean(signal), minfa
     cl = length(corr)
     # good debug hook
     # println(corr)
-    # out = [positions[i] for i in 1:cl
-    #     if corr[i]>mincorr && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
     inds = [i for i in 1:cl if corr[i]>mincorr && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
     sort!(inds, by=i->corr[i],rev=true)
     positions[inds[1:min(length(inds),2)]]
