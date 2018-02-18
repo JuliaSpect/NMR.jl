@@ -1,14 +1,14 @@
 import Plots: plot, plot!, @colorant_str, annotate!, text, font
 using Formatting
 
-function plot_limits(s::NMR.Spectrum, margin = 0.05)
+function plot_limits(s::NMR.Spectrum, margin = 0.1)
     m, M = (minimum(minimum(d) for d in intrng_data(s)),
             maximum(maximum(d) for d in intrng_data(s)))
     Δ = M - m
     (m - margin*Δ, M + margin * Δ)
 end
 
-function plot_limits(a::Array{Float64,1}, margin = 0.05)
+function plot_limits(a::AbstractArray, margin = 0.1)
     m, M = extrema(a)
     Δ = M - m
     (m - margin*Δ, M + margin * Δ)
