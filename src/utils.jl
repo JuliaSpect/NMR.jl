@@ -34,7 +34,7 @@ end
 
 function ppmtoindex(s::Spectrum, δ)
     min_δ ,max_δ = limits(s)
-    Int(cld(s["SI"]*(max_δ - δ), (max_δ - min_δ)))
+    @. Int(cld(s["SI"]*(max_δ - δ), (max_δ - min_δ)))
 end
 
 function ppmtoindex(s::Spectrum, rng::Tuple{Float64,Float64})
