@@ -84,7 +84,7 @@ struct DecompositionResult
     matrix :: Matrix{Float64}
 end
 
-function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1}; kw...)
+function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1}; callback = refs -> println("Found: #$refs"), kw...)
     found = Int[]
     coeffs = Float64[]
     mincorrs = CORR_THRESHOLDS[:]
@@ -116,13 +116,13 @@ function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1}; kw...)
                 # r = refnums[max_component]
                     # println("j: $j, max_component: $max_component")
                     sig .-= m[:,j] .* res[i][1][j]
-                    println("Found: #$r")
                     if r ∉ found
                         append!(coeffs, res[i][1][j])
                         append!(found, r)
                         append!(vecs, m[:,j])
                     end
                 end
+                callback(refnums)
                 break
                 # end
             end
