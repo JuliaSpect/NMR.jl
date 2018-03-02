@@ -15,35 +15,34 @@ function plot_limits(a::AbstractArray, margin = 0.1)
     (m - margin*Δ, M + margin * Δ)
 end
 
-@recipe function f(s::Spectrum; integrate=false, δ=limits(s), npoints = length(s))
+@recipe function f(s::Union{Spectrum, AbstractArray{Spectrum}};
+                   integrate=false, Δ=union_range(s), npoints=0)
+    isarray = isa(s, AbstractArray)
+    ss = isarray ? s : [s]
+    npoints = npoints == 0 ? length(ss[1]) : npoints
     xflip --> true
     grid --> false
-    legend --> false
+    legend --> isarray
     framestyle --> :box
+    xticks --> :auto
     yticks --> []
-    xlims := δ
-    @series begin
-        x = linspace(δ[1], δ[2], npoints)
-        y = resample(s, x)
-        x,y
-    end
-    if integrate
+    for s in ss
         @series begin
-            primary := false
-            color --> :red
-            legend := false
-            linewidth --> 1.5
-            integral_curve(s)
+            x = linspace(Δ[1], Δ[2], npoints)
+            y = resample(s, x)
+            x,y
+        end
+        if integrate
+            @series begin
+                primary := false
+                color --> :red
+                legend := false
+                linewidth --> 1.5
+                integral_curve(s,Δ)
+            end
         end
     end
 end
-
-# function plot(spectra::AbstractArray{Spectrum}; kw...)
-#     shifts = union_shifts(spectra)
-#     labels = reshape([s.name for s in spectra], (1, length(spectra)))
-#     plot(shifts, [resample(s, shifts) for s in spectra]; lab=labels)
-#     plot!(xflip=true, yticks=[], grid=false, yforeground_color_axis=false; kw...)
-# end
 
 function integral_curve(a::AbstractArray{T,1}, scale::Float64; shift=0.0) where T
     isempty(a) && return Float64[]
