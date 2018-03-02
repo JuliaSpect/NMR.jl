@@ -46,6 +46,7 @@ end
 # end
 
 function integral_curve(a::AbstractArray{T,1}, scale::Float64; shift=0.0) where T
+    isempty(a) && return Float64[]
     x = similar(a)
     x[1] = shift
     for i in eachindex(a[2:end])
@@ -54,7 +55,7 @@ function integral_curve(a::AbstractArray{T,1}, scale::Float64; shift=0.0) where 
     return x
 end
 
-function integral_curve(s::Spectrum)
+function integral_curve(s::Spectrum, Δ=limits(s))
     ints = integrate(s)
     if length(ints)==0
         return
@@ -62,16 +63,6 @@ function integral_curve(s::Spectrum)
     maxint = maximum(ints)
     maxpoint = maximum(maximum.(intrng_data(s)))
     scale = maxpoint/maxint
-    shifts = intrng_shifts(s)
-    (shifts, [integral_curve(s[ppmtoindex(s,r)], scale) for r in intrng(s)])
-    # annotation_height = -0.2maxpoint
-    # for (i,r) in enumerate(intrng(s))
-    #     annotate!([(mean(r), annotation_height, text(labels[i], font(10,90.0,colorant"red")))])
-    # end
+    shifts = filter.(δ->minimum(Δ) <= δ <= maximum(Δ), intrng_shifts(s))
+    (shifts, [integral_curve(s[ppmtoindex(s,r)], scale) for r in shifts])
 end
-
-# function integration_plot(s::Spectrum)
-#     n = length(intrng(s))
-#     labels = collect(string(c) for c in 'a':('a'+n-1))
-#     integration_plot(s, labels)
-# end
