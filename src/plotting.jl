@@ -1,4 +1,4 @@
-import Plots: plot, plot!, @colorant_str, annotate!, text, font
+import Plots: plot, plot!
 using Formatting
 using RecipesBase
 
@@ -14,16 +14,6 @@ function plot_limits(a::AbstractArray, margin = 0.1)
     Δ = M - m
     (m - margin*Δ, M + margin * Δ)
 end
-
-# plot(s::Spectrum; integrate = false, kw...) = begin
-#     lo,hi = limits(s)
-#     shifts = linspace(hi, lo, length(s))
-#     p = plot(shifts, s[:], framestyle=:box)
-#     if integrate == true
-#         integration_plot(s)
-#     end
-#     plot!(xflip=true, yticks=[], leg=false; kw...)
-# end
 
 @recipe function f(s::Spectrum; integrate=false, δ=limits(s), npoints = length(s))
     xflip --> true
