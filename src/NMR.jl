@@ -1,4 +1,4 @@
-# Starting point for NMR work in Julia
+__precompile__(true)
 
 module NMR
 
