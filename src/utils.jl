@@ -52,13 +52,21 @@ hztoindex(s::Spectrum, f) = hztoindex(f, s["SW"], s["SF"], s["SI"])
 Base.length(s::Spectrum) = length(s[:])
 Base.length(p::ProcessedSpectrum) = length(p[:])
 
-function union_shifts(spectra::AbstractArray{Spectrum})
-    lims = [limits(s) for s in spectra]
+function union_range(ss::AbstractArray{Spectrum})
+    lims = [limits(s) for s in ss]
     l = minimum(lim[1] for lim in lims)
     h = maximum(lim[2] for lim in lims)
-    res = minimum(freq_resolution(s) for s in spectra)
+    h,l
+end
+
+function union_shifts(ss::AbstractArray{Spectrum})
+    h,l = union_range(ss)
+    res = minimum(freq_resolution(s) for s in ss)
     h:-res:l
 end
+
+union_range(s::Spectrum) = union_range([s])
+union_shifts(s::Spectrum) = union_shifts([s])
 
 freq_resolution(s::Spectrum) = s["SW"] / length(s)
 
