@@ -15,12 +15,12 @@ function chemical_shifts(s::Spectrum)
 end
 
 
-"""     toppm(f, bf)
+"""     hztoppm(f, bf)
 Hz to ppm conversion of a function
 f: Function that takes frequency. (Hz)
 bf: Base frequency. (Hz)
 δ: Chemical shift. (ppm)"""
-function toppm(f, bf)
+function hztoppm(f, bf)
     δ -> f(bf*(1.0+δ*1e-6))
 end
 
