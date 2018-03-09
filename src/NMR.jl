@@ -2,8 +2,6 @@ __precompile__(true)
 
 module NMR
 
-export Spectrum, ProcessedSpectrum, plot, plot!
-
 const Intrng = Tuple{Float64, Float64}
 
 mutable struct ProcessedSpectrum
@@ -47,8 +45,8 @@ Base.setindex!(s::Spectrum, d, rng::Tuple{Float64, Float64}) = (s[s.default_proc
 Spectrum(fid :: Vector{Float64}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum) = Spectrum(fid, acqu, Dict(1=>proc), 1, "", "")
 
 include("baseline.jl")
-include(joinpath("bruker", "read.jl"))
-include(joinpath("bruker", "write.jl"))
+include("bruker/read.jl")
+include("bruker/write.jl")
 include("composition.jl")
 include("decomposition.jl")
 include("integration.jl")
@@ -56,8 +54,11 @@ include("interpolation.jl")
 include("plotting.jl")
 include("utils.jl")
 
-export read_bruker_binary, acq_params, interpolate_spect, lsq_analyze,
-       overlay!, candidates, cand_signals, guess_matrices, limits, chemical_shifts,
-       Spectrum, ProcessedSpectrum
-
+export Spectrum, ProcessedSpectrum, dump, # constructors, I/O
+       plot, plot!, # plotting
+       lsq_analyze, candidates, decompose, # decomposition
+       ppmtoindex, hztoindex, hztoppm, # unit conversion
+       baseline_correct!, # processing
+       limits, chemical_shifts, extract, copy! # utility functions
+       interpolate, resample # interpolation
 end
