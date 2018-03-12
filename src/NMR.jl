@@ -61,4 +61,5 @@ export Spectrum, ProcessedSpectrum, dump, # constructors, I/O
        baseline_correct!, # processing
        limits, chemical_shifts, extract, copy! # utility functions
        interpolate, resample # interpolation
+       intrng, intrng_data, intrng_indices, intrng_shifts # integration regions
 end
