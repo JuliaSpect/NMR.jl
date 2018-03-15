@@ -53,6 +53,7 @@ include("integration.jl")
 include("interpolation.jl")
 include("plotting.jl")
 include("utils.jl")
+include("show.jl")
 
 export Spectrum, ProcessedSpectrum, dump, # constructors, I/O
        plot, plot!, # plotting
