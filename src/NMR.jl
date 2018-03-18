@@ -1,4 +1,4 @@
-__precompile__(true)
+__precompile__(false)
 
 module NMR
 
@@ -16,6 +16,7 @@ Base.getindex(p::ProcessedSpectrum, n::Int) = p.intrng[n]
 Base.getindex(p::ProcessedSpectrum, param::AbstractString) = p.params[param]
 Base.getindex(p::ProcessedSpectrum, ::Colon) = p.re_ft
 Base.getindex(p::ProcessedSpectrum, a::AbstractArray) = p.re_ft[a]
+Base.view(p::ProcessedSpectrum, v) = @view p.re_ft[v]
 
 mutable struct Spectrum
     fid :: Vector{Float64}
@@ -31,6 +32,7 @@ Base.getindex(s::Spectrum, ::Colon) = s.procs[s.default_proc].re_ft
 Base.getindex(s::Spectrum, a::AbstractArray) = s.procs[s.default_proc].re_ft[a]
 Base.getindex(s::Spectrum, rng::Tuple{Float64,Float64}) = s[ppmtoindex(s,rng)]
 Base.getindex(s::Spectrum, δ::Float64) = s[s.default_proc].re_ft[ppmtoindex(s, δ)]
+Base.view(s::Spectrum, v) = @view s.procs[s.default_proc][v]
 function Base.getindex(s::Spectrum, param::AbstractString)
     try
         s.acqu[param]
