@@ -46,6 +46,7 @@ Base.setindex!(s::Spectrum, d, rng::Tuple{Float64, Float64}) = (s[s.default_proc
 
 Spectrum(fid :: Vector{Float64}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum) = Spectrum(fid, acqu, Dict(1=>proc), 1, "", "")
 
+include("utils.jl")
 include("baseline.jl")
 include("bruker/read.jl")
 include("bruker/write.jl")
@@ -55,7 +56,6 @@ include("newdecomposition.jl")
 include("integration.jl")
 include("interpolation.jl")
 include("plotting.jl")
-include("utils.jl")
 include("show.jl")
 
 export Spectrum, ProcessedSpectrum, dump, # constructors, I/O

@@ -90,6 +90,24 @@ end
 
 extract(s::Spectrum, Δ::Intrng) = extract(s, [Δ])
 
+"""Tunes `param` until `expr` evaluates to zero within δ.
+`expr` must be monotonically increasing in terms of `param`."""
+macro binary_opt(expr, param, min, max, δ)
+    :(m = $(esc(min));M = $(esc(max));d=$(esc(δ));z=zero(d);
+    while(true)
+        $(esc(param)) = (m+M)/2
+        e = $(esc(expr))
+        println("val: $e, param:$((m+M)/2), min: $m, max: $M")
+        if norm(e) < d
+            break
+        elseif e < z
+            m = $(esc(param))
+        else
+            M = $(esc(param))
+        end
+    end)
+end
+
 ### Pulse power profile
 
 """     powerprofile(pulse, dt, sfo1)

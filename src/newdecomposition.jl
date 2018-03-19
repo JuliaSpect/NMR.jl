@@ -3,6 +3,9 @@ import StatsBase
 const MINFACT = 0.05
 const HITCORR = 0.9
 const MINCORR = 0.3 # reasonable default
+const MAXFUZZ = 1.8
+const MINFUZZ = 1.0
+const TARGETNGUESS = 5000
 const Guess{N} = NTuple{N,Tuple{Int64,Float64}} where N
 
 """
@@ -49,7 +52,12 @@ alignments(s::Spectrum, args...; kw...) = alignments(s[:],args...;kw...)
 alignments(s::Spectrum, l::Spectrum, args...; kw...) =
     Array{Tuple{Int64,Float64},1}[ alignments(s[:], l[r], r.start, args...; kw...) for r in intrng_indices(l) ]
 
-guesses(s::Spectrum, l::Spectrum) = vec(collect(Base.product(alignments(s, l)...)))
+guesses(s::Spectrum, l::Spectrum; kw...) = vec(collect(Base.product(alignments(s, l; kw...)...)))
+function guesses(s::Spectrum, l::Spectrum, ntarget, δ=ntarget+1)
+    fuzz = (MAXFUZZ + MINFUZZ) / 2
+    @binary_opt ( *(length.(alignments(s, l; fuzziness=fuzz))...) - ntarget ) fuzz MINFUZZ MAXFUZZ δ
+    guesses(s, l; fuzziness=fuzz)
+end
 
 function projection(signal, chunk, start_pos)
     l = length(chunk)
@@ -87,9 +95,10 @@ function fit_score(s::Spectrum, l::Spectrum, guess::NTuple{N,Tuple{Int64,Float64
     end
 end
 
+# overall score, not comparable between references
 score(s, l, g) = fit_score(s, l, g) * projection_score(s, l, g)
 
-synthesize(l::Spectrum, positions) = 
+synthesize(l::Spectrum, positions) =
     overlay!(zeros(length(l)), intrng_data(l), positions)
 synthesize(l::Spectrum, guess::Guess{N}) where N =
     synthesize(l, [ g[1] for g in guess ])
@@ -117,20 +126,26 @@ struct DecompositionResult
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
-    gs = [guesses(s, l) for l in lib]
-    ss = [isempty(g) || i ∈ found ? [0.0] : fit_score.(s, l, g) for (i,l,g) in zip(1:length(lib),lib, gs)]
-    maxs,maxind = findmax(maximum.(ss))
-    if maxs == 0.0
+    gs = [guesses(s, l, TARGETNGUESS) for l in lib]
+    fit_scores = [ isempty(g) || i ∈ found ? [0.0] : fit_score.(s, l, g)
+                   for (i,l,g) in zip(1:length(lib),lib, gs) ]
+    scores = [ isempty(g) || i ∈ found ? [0.0] : score.(s, l, g)
+                   for (i,l,g) in zip(1:length(lib),lib, gs) ]
+    # find best guess per reference based on overall score
+    bestinds = indmax.(scores)
+    # find best reference based on fit_score
+    max_score,max_ref = findmax(get.(fit_scores, bestinds))
+    if max_score == 0.0
         return (s, 0, (), 0.0, Float64[])
     end
-    pss = score.(s, lib[maxind], gs[maxind])
-    _,maxguessind = findmax(pss)
-    maxguess = gs[maxind][maxguessind]
+    # pss = score.(s, lib[maxind], gs[maxind])
+    # _,maxguessind = findmax(pss)
+    maxguess = gs[max_ref][bestinds[max_ref]]
     s = deepcopy(s)
-    l = synthesize(lib[maxind], maxguess)
-    p = projection(s, lib[maxind], maxguess)
+    l = synthesize(lib[max_ref], maxguess)
+    p = projection(s, lib[max_ref], maxguess)
     s[:] .-= p.*l
-    s, maxind, maxguess, p, l.*p
+    s, max_ref, maxguess, p, l.*p
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}; kw...)
