@@ -38,7 +38,7 @@ function alignments(signal, chunk, start_pos; tol=250, fuzziness=1.5,
         corr[i] = @views dot(c,s[i:(i+l-1)]) / norm(s[i:(i+l-1)])
     end
     M = maximum(corr)
-    println(M)
+    # println(M)
     ps = section.start - 1
     lc = length(corr)
     Tuple{Int64,Float64}[ (i+ps, corr[i]) for i=1:lc if
@@ -135,7 +135,7 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
     # find best guess per reference based on overall score
     bestinds = indmax.(scores)
     # find best reference based on fit_score
-    max_score,max_ref = findmax(get.(fit_scores, bestinds))
+    max_score,max_ref = findmax(getindex.(fit_scores, bestinds))
     if max_score == 0.0
         return (s, 0, (), 0.0, Float64[])
     end
