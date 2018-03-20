@@ -6,7 +6,7 @@ function intrng_indices(s::Spectrum)
 end
 
 function intrng_data(s::Spectrum)
-    [s[r] for r in intrng_indices(s)]
+    [@view s[r] for r in intrng_indices(s)]
 end
 
 function intrng_shifts(s::Spectrum)
