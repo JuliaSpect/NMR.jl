@@ -149,7 +149,8 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
     s, max_ref, maxguess, p, l.*p
 end
 
-function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}; kw...)
+function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
+                     callback = refs -> println("Found: #$refs"), kw...)
     found = Int64[]
     coeffs = Float64[]
     vecs = Array{Float64,1}[]
