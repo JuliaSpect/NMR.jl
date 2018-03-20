@@ -5,7 +5,7 @@ const HITCORR = 0.9
 const MINCORR = 0.3 # reasonable default
 const MAXFUZZ = 1.8
 const MINFUZZ = 1.0
-const TARGETNGUESS = 5000
+const TARGETNGUESS = 200
 const Guess{N} = NTuple{N,Tuple{Int64,Float64}} where N
 
 """
@@ -53,7 +53,8 @@ alignments(s::Spectrum, l::Spectrum, args...; kw...) =
     Array{Tuple{Int64,Float64},1}[ alignments(s[:], l[r], r.start, args...; kw...) for r in intrng_indices(l) ]
 
 guesses(s::Spectrum, l::Spectrum; kw...) = vec(collect(Base.product(alignments(s, l; kw...)...)))
-function guesses(s::Spectrum, l::Spectrum, ntarget, δ=ntarget+1)
+function guesses_adaptive(s::Spectrum, l::Spectrum;
+                          ntarget=TARGETNGUESS, δ=ntarget/4, kw...)
     fuzz = (MAXFUZZ + MINFUZZ) / 2
     @binary_opt ( *(length.(alignments(s, l; fuzziness=fuzz))...) - ntarget ) fuzz MINFUZZ MAXFUZZ δ
     guesses(s, l; fuzziness=fuzz)
@@ -126,7 +127,7 @@ struct DecompositionResult
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
-    gs = [guesses(s, l, TARGETNGUESS) for l in lib]
+    gs = [guesses_adaptive(s, l; kw...) for l in lib]
     fit_scores = [ isempty(g) || i ∈ found ? [0.0] : fit_score.(s, l, g)
                    for (i,l,g) in zip(1:length(lib),lib, gs) ]
     scores = [ isempty(g) || i ∈ found ? [0.0] : score.(s, l, g)
@@ -161,7 +162,7 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}; kw...)
         push!(found, m)
         push!(vecs, v)
         push!(coeffs, p)
-        println("Found $m")
+        callback([m])
     end
     DecompositionResult(coeffs, found, ss, hcat(vecs...))
 end
