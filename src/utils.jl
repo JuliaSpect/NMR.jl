@@ -29,7 +29,7 @@ function sr(sf, bf)
 end
 
 function ppmtoindex(δ, sw, o1p, sr, sf)
-    max_shift = o1p + 0.5sw - sr/sf 
+    max_shift = o1p + 0.5sw - sr/sf
 end
 
 function ppmtoindex(s::Spectrum, δ)
