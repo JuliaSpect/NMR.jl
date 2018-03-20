@@ -69,23 +69,44 @@ end
 positions(guess) = Int64[ g[1] for g in guess ]
 fitness(guess) = Float64[ g[2] for g in guess ]
 
+function fitness_weights(guess, λ=10.0)
+    f = fitness(guess)
+    F = maximum(f)
+    exp.(λ/F*(f.-F))
+end
+
+function projection_weights(projs, fitness_weights=ones(length(p)), η=2.0)
+    # p = projections(s, l, positions(guess))
+    fw = StatsBase.weights(fitness_weights)
+    σ = std(projs, fw; corrected=false)/η
+    m = mean(projs, fw)
+    exp.(-(projs.-m).^2/2σ^2)
+end
+
 function projections(s::Spectrum, l::Spectrum, positions)
     sig = s[:]
     Float64[ projection(sig, r, p) for (p,r) in zip(positions, intrng_data(l)) ]
 end
 
-function projection(s::Spectrum, l::Spectrum, positions, weights=ones(positions))
-    projs = projections(s, l, positions)
-    mean(projs, StatsBase.weights(weights))
-end
+# function projection(s::Spectrum, l::Spectrum, positions, weights=ones(positions))
+#     projs = projections(s, l, positions)
+#     mean(projs, StatsBase.weights(weights))
+# end
 
-function projection(s::Spectrum, l::Spectrum, guess::NTuple{N,Tuple{Int64,Float64}}, f=identity) where N
-    projection(s, l, positions(guess), Float64[f(ff) for ff in fitness(guess)])
+function projection(s::Spectrum, l::Spectrum, guess::NTuple{N,Tuple{Int64,Float64}}) where N
+    projs = projections(s, l, positions(guess))
+    if length(projs) == 1
+        return projs
+    end
+    fw = fitness_weights(guess)
+    # projection(s, l, positions(guess), f(s, l, guess))
+    mean(projs, StatsBase.weights(projection_weights(projs, fw)))
+    # projection(s, l, positions(guess), Float64[f(ff) for ff in fitness(guess)])
 end
 
 function projection_score(s::Spectrum, l::Spectrum, guess::NTuple{N,Tuple{Int64,Float64}}) where N
     projs = projections(s, l, positions(guess))
-    mean(projs)/std(projs; corrected = false)
+    mean(projs)/std(projs, StatsBase.weights(fitness(guess)); corrected = false)
 end
 
 function fit_score(s::Spectrum, l::Spectrum, guess::NTuple{N,Tuple{Int64,Float64}}) where N
