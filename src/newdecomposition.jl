@@ -77,7 +77,7 @@ function fitness_weights(guess, λ=10.0)
     exp.(λ/F*(f.-F))
 end
 
-function projection_weights(projs, fitness_weights=ones(length(p)), η=2.0)
+function projection_weights(projs, fitness_weights=ones(length(projs)), η=2.0)
     # p = projections(s, l, positions(guess))
     fw = StatsBase.weights(fitness_weights)
     σ = std(projs, fw; corrected=false)/η
@@ -98,7 +98,7 @@ end
 function projection(s::Spectrum, l::Spectrum, guess::NTuple{N,Tuple{Int64,Float64}}) where N
     projs = projections(s, l, positions(guess))
     if length(projs) == 1
-        return projs
+        return first(projs)
     end
     fw = fitness_weights(guess)
     # projection(s, l, positions(guess), f(s, l, guess))
@@ -125,7 +125,7 @@ score(s, l, g) = fit_score(s, l, g) * projection_score(s, l, g)
 synthesize(l::Spectrum, positions) =
     overlay!(zeros(length(l)), intrng_data(l), positions)
 synthesize(l::Spectrum, guess::Guess{N}) where N =
-    synthesize(l, [ g[1] for g in guess ])
+    synthesize(l, positions(guess))
 
 # function score(s::Spectrum, l::Spectrum, guess::AbstractArray{Tuple{Int,Float64}})
 #     *((g[2] for g in guess)...)
@@ -169,11 +169,11 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
     # pss = score.(s, lib[maxind], gs[maxind])
     # _,maxguessind = findmax(pss)
     maxguess = gs[max_ref][bestinds[max_ref]]
-    s = deepcopy(s)
+    ss = deepcopy(s)
     l = synthesize(lib[max_ref], maxguess)
     p = projection(s, lib[max_ref], maxguess)
-    s[:] .-= p.*l
-    s, max_ref, maxguess, p, l.*p
+    ss[:] .-= p.*l
+    ss, max_ref, maxguess, p, l.*p
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
