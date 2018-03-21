@@ -41,11 +41,13 @@ function alignments(signal, chunk, start_pos; tol=250, fuzziness=1.5,
     # println(M)
     ps = section.start - 1
     lc = length(corr)
-    Tuple{Int64,Float64}[ (i+ps, corr[i]) for i=1:lc if
-                                          corr[i] > mincorr &&
-                                          (i==1 || corr[i] > corr[i-1]) &&
-                                          (i==lc || corr[i] > corr[i+1]) &&
-                                          M/corr[i] < fuzziness ]
+    let lc=lc, corr=corr, ps=ps, M=M
+        Tuple{Int64,Float64}[ (i+ps, corr[i]) for i=eachindex(corr) if
+                              corr[i] > mincorr &&
+                              (i==1 || corr[i] > corr[i-1]) &&
+                              (i==lc || corr[i] > corr[i+1]) &&
+                              M/corr[i] < fuzziness ]
+    end
 end
 
 alignments(s::Spectrum, args...; kw...) = alignments(s[:],args...;kw...)
@@ -148,11 +150,15 @@ struct DecompositionResult
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
-    gs = [guesses_adaptive(s, l; kw...) for l in lib]
-    fit_scores = [ isempty(g) || i ∈ found ? [0.0] : fit_score.(s, l, g)
-                   for (i,l,g) in zip(1:length(lib),lib, gs) ]
-    scores = [ isempty(g) || i ∈ found ? [0.0] : score.(s, l, g)
-                   for (i,l,g) in zip(1:length(lib),lib, gs) ]
+    gs = guesses_adaptive.(s, lib; kw...)
+    fit_scores = let s=s
+        Array{Float64,1}[ isempty(g) || i ∈ found ? [0.0] : fit_score.(s, l, g)
+                          for (i,l,g) in zip(1:length(lib),lib, gs) ]
+    end
+    scores = let s=s
+        Array{Float64,1}[ isempty(g) || i ∈ found ? [0.0] : score.(s, l, g)
+                          for (i,l,g) in zip(1:length(lib),lib, gs) ]
+    end
     # find best guess per reference based on overall score
     bestinds = indmax.(scores)
     # find best reference based on fit_score
