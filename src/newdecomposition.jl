@@ -1,8 +1,8 @@
 import StatsBase
 
-const MINFACT = 0.05
+const MINFACT = 0.1
 const HITCORR = 0.9
-const MINCORR = 0.3 # reasonable default
+const MINCORR = 0.25 # reasonable default
 const MAXFUZZ = 1.8
 const MINFUZZ = 1.0
 const TARGETNGUESS = 200
