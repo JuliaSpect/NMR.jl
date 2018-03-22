@@ -153,14 +153,14 @@ struct DecompositionResult
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
-    gs = guesses_adaptive.(s, lib; kw...)
-    fit_scores = let s=s
-        Array{Float64,1}[ isempty(g) || i ∈ found ? [0.0] : fit_score.(s, l, g)
-                          for (i,l,g) in zip(1:length(lib),lib, gs) ]
-    end
-    scores = let s=s
-        Array{Float64,1}[ isempty(g) || i ∈ found ? [0.0] : score.(s, l, g)
-                          for (i,l,g) in zip(1:length(lib),lib, gs) ]
+    ll = length(lib)
+    gs = Array{Any}(ll)
+    fit_scores = Array{Array{Float64,1}}(ll)
+    scores = Array{Array{Float64,1}}(ll)
+    @Threads.threads for r=1:ll
+        gs[r] = guesses_adaptive(s, lib[r]; kw...)
+        fit_scores[r] = isempty(gs[r]) || r ∈ found ? [0.0] : fit_score.(s, lib[r], gs[r])
+        scores[r] = isempty(gs[r]) || r ∈ found ? [0.0] : score.(s, lib[r], gs[r])
     end
     # find best guess per reference based on overall score
     bestinds = indmax.(scores)
