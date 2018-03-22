@@ -185,8 +185,9 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
     coeffs = Float64[]
     vecs = Array{Float64,1}[]
     ss = copy(s[:])
+    ms = MINFACT * norm(ss)
     while true
-        s, m, g, p, v = lsq_analyze(s, lib, found; kw...)
+        s, m, g, p, v = lsq_analyze(s, lib, found; minsig=ms, kw...)
         if m == 0
             break
         end
