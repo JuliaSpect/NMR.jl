@@ -176,7 +176,7 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
     l = synthesize(lib[max_ref], maxguess)
     p = projection(s, lib[max_ref], maxguess)
     ss[:] .-= p.*l
-    ss, max_ref, maxguess, p, l.*p
+    ss, max_ref, maxguess, p, l
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
