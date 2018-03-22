@@ -61,8 +61,8 @@ guesses(s::Spectrum, l::Spectrum; kw...) = vec(collect(Base.product(alignments(s
 function guesses_adaptive(s::Spectrum, l::Spectrum;
                           ntarget=TARGETNGUESS, δ=ntarget/4, kw...)
     fuzz = (MAXFUZZ + MINFUZZ) / 2
-    @binary_opt ( *(length.(alignments(s, l; fuzziness=fuzz))...) - ntarget ) fuzz MINFUZZ MAXFUZZ δ
-    guesses(s, l; fuzziness=fuzz)
+    @binary_opt ( *(length.(alignments(s, l; fuzziness=fuzz, kw...))...) - ntarget ) fuzz MINFUZZ MAXFUZZ δ
+    guesses(s, l; fuzziness=fuzz, kw...)
 end
 
 function projection(signal, chunk, start_pos)
