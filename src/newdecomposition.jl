@@ -23,27 +23,30 @@ function overlay!(signal, chunks, positions)
 end
 
 function alignments(signal, chunk, start_pos; tol=250, fuzziness=1.5,
-                    minsig=MINFACT*mean(signal), mincorr=MINCORR)
+                    minsig=MINFACT*norm(signal), mincorr=MINCORR)
     l = length(chunk)
     section = max(1, -tol+start_pos):min(length(signal), tol+l-1+start_pos)
     s = @view signal[section]
     # reject weak signals, important if signal only contains noise
-    if mean(s) < minsig
-        return Tuple{Int64,Float64}[]
-    end
     c = normalize(chunk)
     # return s,c
     corr = zeros(length(section)-l+1)
+    lc = length(corr)
+    lratio = l/length(signal)
     for i in eachindex(corr)
-        corr[i] = @views dot(c,s[i:(i+l-1)]) / norm(s[i:(i+l-1)])
+        sig = @view s[i:(i+l-1)]
+        xc = dot(c,sig)
+        corr[i] = xc < minsig*lratio ? 0.001 :  xc/norm(sig)
     end
     M = maximum(corr)
+    if M < mincorr
+        return Tuple{Int64,Float64}[]
+    end
     # println(M)
     ps = section.start - 1
-    lc = length(corr)
     let lc=lc, corr=corr, ps=ps, M=M
         Tuple{Int64,Float64}[ (i+ps, corr[i]) for i=eachindex(corr) if
-                              corr[i] > mincorr &&
+                              # corr[i] > mincorr &&
                               (i==1 || corr[i] > corr[i-1]) &&
                               (i==lc || corr[i] > corr[i+1]) &&
                               M/corr[i] < fuzziness ]
