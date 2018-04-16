@@ -51,15 +51,10 @@ include("baseline.jl")
 include("bruker/read.jl")
 include("bruker/write.jl")
 include("composition.jl")
-# include("decomposition.jl")
 include("newdecomposition.jl")
 include("integration.jl")
 include("interpolation.jl")
 include("plotting.jl")
-<<<<<<< HEAD
-include("utils.jl")
-=======
->>>>>>> newdecomposition
 include("show.jl")
 
 export Spectrum, ProcessedSpectrum, dump, # constructors, I/O
