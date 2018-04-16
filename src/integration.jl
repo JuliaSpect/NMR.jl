@@ -6,10 +6,10 @@ function intrng_indices(s::Spectrum)
 end
 
 function intrng_data(s::Spectrum)
-    [s[r] for r in intrng_indices(s)]
+    [@view s[r] for r in intrng_indices(s)]
 end
 
-function intrng_shifts(s::Spectrum) 
+function intrng_shifts(s::Spectrum)
     rng = intrng(s)
     [linspace(i[1],i[2],ppmtoindex(s,i[2])-ppmtoindex(s,i[1])+1) for i in rng]
 end

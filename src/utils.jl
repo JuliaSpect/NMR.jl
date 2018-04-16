@@ -29,7 +29,7 @@ function sr(sf, bf)
 end
 
 function ppmtoindex(δ, sw, o1p, sr, sf)
-    max_shift = o1p + 0.5sw - sr/sf 
+    max_shift = o1p + 0.5sw - sr/sf
 end
 
 function ppmtoindex(s::Spectrum, δ)
@@ -89,6 +89,24 @@ function extract(s::Spectrum, Δs::AbstractArray{Intrng})
 end
 
 extract(s::Spectrum, Δ::Intrng) = extract(s, [Δ])
+
+"""Tunes `param` until `expr` evaluates to zero within δ.
+`expr` must be monotonically increasing in terms of `param`."""
+macro binary_opt(expr, param, min, max, δ, nattempts=5)
+    :(m = $(esc(min));M = $(esc(max));d=$(esc(δ));z=zero(d);n=$(esc(nattempts));
+    for i=1:n
+        $(esc(param)) = (m+M)/2
+        e = $(esc(expr))
+        # println("val: $e, param:$((m+M)/2), min: $m, max: $M")
+        if norm(e) < d
+            break
+        elseif e < z
+            m = $(esc(param))
+        else
+            M = $(esc(param))
+        end
+    end)
+end
 
 ### Pulse power profile
 
