@@ -13,6 +13,11 @@ function parse_float_list(m)
     [float(s) for s in split(m)[2:end]]
 end
 
+function parse_or(T::Type, s, default)
+    v = tryparse(T, s)
+    isnull(v) ? default : v.value
+end
+
 filters = [ ( Set(["SW", "O1", "SFO1", "SF", "BF1"]),
               float ),
             ( Set(["TD", "NS", "DS", "SI"]),
@@ -20,9 +25,9 @@ filters = [ ( Set(["SW", "O1", "SFO1", "SF", "BF1"]),
             ( Set(["D", "P"]),
               parse_float_list),
             ( Set(["PULPROG"]),
-              x -> strip(x)[2:end-1]),
+              x -> strip(x)[2:end-1] ),
             ( Set(["AUTOPOS"]),
-              x -> parse(Int, strip(x)[2:end-1]))
+              x -> parse_or(Int, strip(x)[2:end-1], 0) )
 ]
 
 function read_params(file)
