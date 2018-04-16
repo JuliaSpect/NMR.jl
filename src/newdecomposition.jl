@@ -1,4 +1,5 @@
 import StatsBase
+using Compat
 
 const MINFACT = 0.1
 const HITCORR = 0.9
@@ -154,9 +155,9 @@ end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
     ll = length(lib)
-    gs = Array{Any}(ll)
-    fit_scores = Array{Array{Float64,1}}(ll)
-    scores = Array{Array{Float64,1}}(ll)
+    gs = Array{Any}(undef, ll)
+    fit_scores = Array{Array{Float64,1}}(undef, ll)
+    scores = Array{Array{Float64,1}}(undef, ll)
     @Threads.threads for r=1:ll
         gs[r] = guesses_adaptive(s, lib[r]; kw...)
         fit_scores[r] = isempty(gs[r]) || r ∈ found ? [0.0] : fit_score.(s, lib[r], gs[r])
