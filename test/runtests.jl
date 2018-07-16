@@ -1,5 +1,15 @@
 using NMR
 using Base.Test
 
+ϵ = 0.001
+
+dataset_path = joinpath(@__DIR__, "data", "PhB(OH)2", "1")
 # write your own tests here
-@test 1 == 2
+@testset "Read Bruker" begin
+    s = Spectrum(dataset_path, 1)
+    @test s.default_proc == 1
+    @test length(s) == length(s[1])  == 32768
+    @test typeof(s[:]) == typeof(s[1][:]) <: Array{T,1} where T <: Number
+    @test limits(s)[1] ≈ -0.4997 atol=ϵ
+    @test limits(s)[2] ≈ 13.4996 atol=ϵ
+end
