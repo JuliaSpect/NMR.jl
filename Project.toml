@@ -1,3 +1,8 @@
+authors = ["Hessam Mehr <hessammehr@gmail.com>"]
+name = "NMR"
+uuid = "b16bd9d8-8895-11e8-22c4-8b9b4a7e64af"
+version = "0.3.0"
+
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 Formatting = "59287772-0a20-5a39-b81b-1366585eb4c0"
