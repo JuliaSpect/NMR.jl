@@ -1,3 +1,18 @@
+# Utility functions, mostly for unit conversions.
+# NMR quantities in Bruker notation [1]:
+# BF1: Basic transmitter frequency (MHz)
+# SF: Spectrometer frequency (MHz)
+# SR: Spectrum reference frequency (Hz)
+# SR = (SF - BF1) * 10^6
+# SFO1: Transmitter frequency (MHz)
+# O1: Transmitter frequency offset (Hz)
+# O1 = (SFO1 - BF1) * 10^6
+# Ω: Absolute frequency (MHz)
+# ω: Frequency relative to SF1 (Hz)
+# δ: Chemical shift δ (ppm)
+# δ = 10^6 * (Ω - SF) / SF = ω / SF
+# 1. Numerical indices indicate different nuclei
+
 import Base: in
 
 limits(s::Spectrum) = limits(s["O1P"], s["SW"], s["SF"], s["BF1"])
@@ -17,23 +32,46 @@ function chemical_shifts(s::Spectrum)
 end
 
 
-"""     hztoppm(f, bf)
-Hz to ppm conversion of a function
-f: Function that takes frequency. (Hz)
-bf: Base frequency. (Hz)
-δ: Chemical shift. (ppm)"""
-function hztoppm(f, bf)
-    δ -> f(bf*(1.0+δ*1e-6))
+"""
+    ppmtomhz_abs(δ, bf[, sr])
+Convert chemical shift δ to absolute frequency Ω in MHz.
+bf in MHz and sr in Hz.
+"""
+function ppmtomhz_abs(δ, bf, sr = 0.0)
+    bf = bf * 1e6
+    1e-6(bf+sr)δ + bf + sr
 end
 
-function sr(sf, bf)
-    return 1e6(sf-bf)
+"""
+    ppmtohz(δ, bf[, sr])
+Convert chemical shift δ in ppm to relative frequency ω in Hz.
+bf in MHz and sr in Hz.
+"""
+function ppmtohz(δ, bf, sr = 0.0)
+    (bf + sr*1e-6)δ
 end
 
-function ppmtoindex(δ, sw, o1p, sr, sf)
-    max_shift = o1p + 0.5sw - sr/sf
+"""
+    hztoppm(ω, bf[, sr])
+Convert relative frequency ω in Hz to chemical shift δ in ppm .
+bf in MHz and sr in Hz.
+"""
+function hztoppm(ω, bf, sr = 0.0)
+    ω / (bf + sr*1e-6)
 end
 
+"""
+    sr(sf, bf)
+Return spectral reference (SR in Bruker notation) in Hz.
+sf and bf in MHz.
+"""
+sr(sf, bf) = 1e6(sf - bf)
+
+"""
+    ppmtoindex(::Spectrum, δ)
+Return the index in the processed spectrum corresponding to
+chemical shift δ.
+"""
 function ppmtoindex(s::Spectrum, δ)
     min_δ ,max_δ = limits(s)
     @. Int(cld(s["SI"]*(max_δ - δ), (max_δ - min_δ)))
