@@ -2,8 +2,17 @@ module NMR
 
 using Compat
 
+"Integration range in the frequency domain, values given in ppm."
 const Intrng = Tuple{Float64, Float64}
 
+"""
+Processed (frequency domain) NMR spectrum. Parameters follow the Bruker conventions:
+- **re_ft**: real part of Fourier transform
+- **im_ft**: imaginary part of Fourier transform
+- **params**: dictionary of processing parameters, mostly from `proc` file for Bruker data
+- **intrng**: list of integration ranges
+- **title**: Spectrum title
+"""
 mutable struct ProcessedSpectrum
     re_ft :: Vector{Float64}
     im_ft :: Vector{Float64}
@@ -12,12 +21,24 @@ mutable struct ProcessedSpectrum
     procno :: Int
     title :: String
 end
+
 Base.getindex(p::ProcessedSpectrum, n::Int) = p.intrng[n]
 Base.getindex(p::ProcessedSpectrum, param::AbstractString) = p.params[param]
 Base.getindex(p::ProcessedSpectrum, ::Colon) = p.re_ft
 Base.getindex(p::ProcessedSpectrum, a::AbstractArray) = p.re_ft[a]
 Base.view(p::ProcessedSpectrum, v) = @view p.re_ft[v]
 
+"""
+Unprocessed NMR experiment: FID and any associated processed spectra.
+
+Following Bruker convention:
+- **fid**: Acquired free induction decay (FID) signal
+- **acqu**: Acquisition parameters, mostly from `acqu` file for Bruker data
+- **procs**: Dictionary of associated processed spectra
+- **default_proc**: Default processed spectrum to be used in operations that require a processed spectrum
+- **name**: Experiment name
+- **expno**: Experiment number if, e.g., part of a Bruker dataset
+"""
 mutable struct Spectrum
     fid :: Vector{Float64}
     acqu :: Dict{String, Any}
