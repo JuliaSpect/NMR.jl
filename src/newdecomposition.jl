@@ -1,5 +1,4 @@
 import StatsBase
-using Compat
 
 const MINFACT = 0.1
 const HITCORR = 0.9

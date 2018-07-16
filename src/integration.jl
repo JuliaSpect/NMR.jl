@@ -33,11 +33,11 @@ end
 remove_rng!(s::Spectrum, δ::Float64) = remove_rng!(s[s.default_proc], δ)
 remove_rng!(p::ProcessedSpectrum, δ::Float64) = remove_rng!(p, find_rng(p, δ))
 remove_rng!(p::ProcessedSpectrum, n::Int) = deleteat!(p.intrng, n)
-remove_rng!(p::ProcessedSpectrum, x::Void) = nothing
+remove_rng!(p::ProcessedSpectrum, x::Nothing) = nothing
 
-integrate(v::Vector, r::Range) = sum(v[r])
-integrate(p::ProcessedSpectrum, r::Range) = integrate(p[:], r)
-integrate(s::Spectrum, r::Range) = integrate(s[s.default_proc], r)
+integrate(v::Vector, r::UnitRange) = sum(v[r])
+integrate(p::ProcessedSpectrum, r::UnitRange) = integrate(p[:], r)
+integrate(s::Spectrum, r::UnitRange) = integrate(s[s.default_proc], r)
 
 function integrate(s::Spectrum, ppm_range::Tuple{Float64,Float64})
     r1 = ppmtoindex(s, ppm_range[1])

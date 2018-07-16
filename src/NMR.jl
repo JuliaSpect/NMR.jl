@@ -1,6 +1,6 @@
-__precompile__(false)
-
 module NMR
+
+using Compat
 
 const Intrng = Tuple{Float64, Float64}
 
@@ -41,7 +41,7 @@ function Base.getindex(s::Spectrum, param::AbstractString)
     end
 end
 Base.setindex!(s::Spectrum, d::AbstractArray, ::Colon) = (s[s.default_proc].re_ft .= d)
-Base.setindex!(s::Spectrum, d::AbstractArray, r::Range) = (s[s.default_proc].re_ft[r] .= d)
+Base.setindex!(s::Spectrum, d::AbstractArray, r::UnitRange) = (s[s.default_proc].re_ft[r] .= d)
 Base.setindex!(s::Spectrum, d, rng::Tuple{Float64, Float64}) = (s[s.default_proc].re_ft[ppmtoindex(s,rng)]=d)
 
 Spectrum(fid :: Vector{Float64}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum) = Spectrum(fid, acqu, Dict(1=>proc), 1, "", "")
