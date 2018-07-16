@@ -10,16 +10,22 @@ end
 function parse_float_list(m)
     lines = split(m)
     # The first line of a match is "(0..n)"; we don't need this.
-    [float(s) for s in split(m)[2:end]]
+    [parse(Float64, s) for s in split(m)[2:end]]
 end
 
-function parse_or(T::Type, s, default)
+function parse_or(::Type{T}, s, default) where T
     v = tryparse(T, s)
-    isnull(v) ? default : v.value
+    if isa(v, T)
+        return v
+    elseif v === nothing
+        return default
+    else
+        isnull(v) ? default : v.value # for Julia 0.6 compatibility
+    end
 end
 
 filters = [ ( Set(["SW", "O1", "SFO1", "SF", "BF1"]),
-              float ),
+              s -> parse(Float64, s) ),
             ( Set(["TD", "NS", "DS", "SI"]),
               s -> parse(Int, s) ),
             ( Set(["D", "P"]),
@@ -31,7 +37,8 @@ filters = [ ( Set(["SW", "O1", "SFO1", "SF", "BF1"]),
 ]
 
 function read_params(file)
-    matches = eachmatch(r"##\$?(.*?)=\s?([^#]+)"s, open(readstring, file))
+    contents = read(file, String)
+    matches = eachmatch(r"##\$?(.*?)=\s?([^#]+)"s, contents)
     res = Dict(m.captures[1] => parse_param(m.captures[1], m.captures[2]) for m in matches)
 
     # a few little tweaks
@@ -48,9 +55,9 @@ function read_intrng(file)
         return []
     end
     if length(lines) > 2 && strip(lines[1])[1] == 'A'
-        [tuple(map(float,split(line)[1:2])...) for line in lines[3:end]]
+        [tuple(map(s -> parse(Float64, s), split(line)[1:2])...) for line in lines[3:end]]
     elseif length(lines) > 1 && strip(lines[1])[1] == 'P'
-        [tuple(map(float,split(line))...) for line in lines[2:end]]
+        [tuple(map(s -> parse(Float64, s), split(line))...) for line in lines[2:end]]
     else
         []
     end
@@ -69,7 +76,7 @@ function ProcessedSpectrum(path :: AbstractString, procno :: Int)
     re_ft = float(read_bruker_binary(joinpath(path, "1r")))
     im_ft = float(read_bruker_binary(joinpath(path, "1i")))
     params = read_params(joinpath(path, "proc"))
-    title = readstring(joinpath(path, "title"))
+    title = read(joinpath(path, "title"), String)
     intrng = read_intrng(joinpath(path, "intrng"))
     ProcessedSpectrum(re_ft, im_ft, params, intrng, procno, title)
 end
