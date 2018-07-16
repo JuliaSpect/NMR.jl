@@ -1,6 +1,13 @@
-const CORR_THRESHOLDS = [0.9,0.7,0.6,0.5,0.3,0.2,0.15,0.1]
-const MINFACT = 0.05
-const MINCORR = 0.8 # reasonable default
+import StatsBase
+
+const MINFACT = 0.1
+const HITCORR = 0.9
+const MINCORR = 0.25 # reasonable default
+const MAXFUZZ = 1.8
+const MINFUZZ = 1.0
+const TARGETNGUESS = 200
+const Guess{N} = NTuple{N,Tuple{Int64,Float64}} where N
+
 """
     overlay!(signal, chunks, positions)
 
@@ -15,38 +22,120 @@ function overlay!(signal, chunks, positions)
     signal
 end
 
-
-function candidates(signal, chunk, start_pos; tol = 250, avg=mean(signal), minfact=MINFACT, mincorr = 0.8)
+function alignments(signal, chunk, start_pos; tol=250, fuzziness=1.5,
+                    minsig=MINFACT*norm(signal), mincorr=MINCORR)
     l = length(chunk)
-    positions = (-tol+start_pos):(tol+start_pos)
-    s = vcat(zeros(tol),signal[start_pos:start_pos+l-1],zeros(tol))
-    
+    section = max(1, -tol+start_pos):min(length(signal), tol+l-1+start_pos)
+    s = @view signal[section]
     # reject weak signals, important if signal only contains noise
-    minsig = avg*minfact
-    if mean(s) < minsig
-        return Int64[]
-    end
-    normalize!(s)
     c = normalize(chunk)
-    corr = zeros(tol*2+1)
+    # return s,c
+    corr = zeros(length(section)-l+1)
+    lc = length(corr)
+    lratio = l/length(signal)
     for i in eachindex(corr)
-        corr[i] = sum(c.*s[i:(i+l-1)])
+        sig = @view s[i:(i+l-1)]
+        xc = dot(c,sig)
+        corr[i] = xc < minsig*lratio ? 0.001 :  xc/norm(sig)
     end
-    cl = length(corr)
-    # good debug hook
-    # println(corr)
-    inds = [i for i in 1:cl if corr[i]>mincorr && (i==cl || corr[i] > corr[i+1]) && (i==1 || corr[i] > corr[i-1])]
-    sort!(inds, by=i->corr[i],rev=true)
-    positions[inds[1:min(length(inds),2)]]
+    M = maximum(corr)
+    if M < mincorr
+        return Tuple{Int64,Float64}[]
+    end
+    # println(M)
+    ps = section.start - 1
+    let lc=lc, corr=corr, ps=ps, M=M
+        Tuple{Int64,Float64}[ (i+ps, corr[i]) for i=eachindex(corr) if
+                              # corr[i] > mincorr &&
+                              (i==1 || corr[i] > corr[i-1]) &&
+                              (i==lc || corr[i] > corr[i+1]) &&
+                              M/corr[i] < fuzziness ]
+    end
 end
- 
-candidates(s::Spectrum, args...; kw...) = candidates(s[:],args...;kw...)
-candidates(s::Spectrum, l::Spectrum, args...; kw...) =
-    [ candidates(s[:], l[r], r.start, args...; kw...) for r in intrng_indices(l) ]
 
+alignments(s::Spectrum, args...; kw...) = alignments(s[:],args...;kw...)
+alignments(s::Spectrum, l::Spectrum, args...; kw...) =
+    Array{Tuple{Int64,Float64},1}[ alignments(s[:], l[r], r.start, args...; kw...) for r in intrng_indices(l) ]
 
-function cand_signals(s::Spectrum, l::Spectrum; sloppiness=0, kw...)
-    positions = candidates(s, l; kw...)
+guesses(s::Spectrum, l::Spectrum; kw...) = vec(collect(Base.product(alignments(s, l; kw...)...)))
+function guesses_adaptive(s::Spectrum, l::Spectrum;
+                          ntarget=TARGETNGUESS, δ=ntarget/4, kw...)
+    fuzz = (MAXFUZZ + MINFUZZ) / 2
+    @binary_opt ( *(length.(alignments(s, l; fuzziness=fuzz, kw...))...) - ntarget ) fuzz MINFUZZ MAXFUZZ δ
+    guesses(s, l; fuzziness=fuzz, kw...)
+end
+
+function projection(signal, chunk, start_pos)
+    l = length(chunk)
+    s = @view signal[start_pos:start_pos+l-1]
+    dot(s, chunk)/norm(chunk)^2
+end
+
+positions(guess) = Int64[ g[1] for g in guess ]
+fitness(guess) = Float64[ g[2] for g in guess ]
+
+function fitness_weights(guess, λ=10.0)
+    f = fitness(guess)
+    F = maximum(f)
+    exp.(λ/F*(f.-F))
+end
+
+function projection_weights(projs, fitness_weights=ones(length(projs)), η=2.0)
+    # p = projections(s, l, positions(guess))
+    fw = StatsBase.weights(fitness_weights)
+    σ = std(projs, fw; corrected=false)/η
+    m = mean(projs, fw)
+    exp.(-(projs.-m).^2/2σ^2)
+end
+
+function projections(s::Spectrum, l::Spectrum, positions)
+    sig = s[:]
+    Float64[ projection(sig, r, p) for (p,r) in zip(positions, intrng_data(l)) ]
+end
+
+# function projection(s::Spectrum, l::Spectrum, positions, weights=ones(positions))
+#     projs = projections(s, l, positions)
+#     mean(projs, StatsBase.weights(weights))
+# end
+
+function projection(s::Spectrum, l::Spectrum, guess::NTuple{N,Tuple{Int64,Float64}}) where N
+    projs = projections(s, l, positions(guess))
+    if length(projs) == 1
+        return first(projs)
+    end
+    fw = fitness_weights(guess)
+    # projection(s, l, positions(guess), f(s, l, guess))
+    mean(projs, StatsBase.weights(projection_weights(projs, fw)))
+    # projection(s, l, positions(guess), Float64[f(ff) for ff in fitness(guess)])
+end
+
+function projection_score(s::Spectrum, l::Spectrum, guess::NTuple{N,Tuple{Int64,Float64}}) where N
+    projs = projections(s, l, positions(guess))
+    mean(projs)/std(projs, StatsBase.weights(fitness(guess)); corrected = false)
+end
+
+function fit_score(s::Spectrum, l::Spectrum, guess::NTuple{N,Tuple{Int64,Float64}}) where N
+    if N == 0
+        0.0
+    else
+        *((g[2] for g in guess)...)^(1/N)
+    end
+end
+
+# overall score, not comparable between references
+score(s, l, g) = fit_score(s, l, g) * projection_score(s, l, g)
+
+synthesize(l::Spectrum, positions) =
+    overlay!(zeros(length(l)), intrng_data(l), positions)
+synthesize(l::Spectrum, guess::Guess{N}) where N =
+    synthesize(l, positions(guess))
+
+# function score(s::Spectrum, l::Spectrum, guess::AbstractArray{Tuple{Int,Float64}})
+#     *((g[2] for g in guess)...)
+# end
+
+function aligned_signals(s::Spectrum, l::Spectrum; sloppiness=0, kw...)
+    positions = alignments(s, l; kw...)
     matched = filter(p->!isempty(p), positions)
     if length(matched) == 0 ||  length(positions) - length(matched) > sloppiness
         return []
@@ -56,27 +145,6 @@ function cand_signals(s::Spectrum, l::Spectrum; sloppiness=0, kw...)
         comb in Base.product(matched...))
 end
 
-function guess_matrices(s::Spectrum, lib::Array{Spectrum,1}; exclude = [], minfact=fill(MINFACT, length(lib)), sloppiness=Dict(), kw...)
-    # println("""Ratio factors: $(join(minfact, ", "))""")
-    sk = keys(sloppiness)
-    gens = [cand_signals(s,l; minfact=minfact[i], sloppiness=get(sloppiness,i,0), kw...) for (i,l) in enumerate(lib)]
-    indices = [i for i in eachindex(gens) if length(gens[i])>0 && i ∉ exclude]
-    if isempty(indices)
-        # no match found
-        return ([], [])
-    end
-    # product_gens = Base.product([g for g in gens if length(g)>0]...)
-    product_gens = Base.product(gens[indices]...)
-    (indices, (hcat(p...) for p in product_gens))
-end
-
-function lsq_analyze(s::Vector{Float64}, l::Matrix{Float64})
-    soln = l\s # Least-squares solution
-    recon = l*soln
-    res = norm(recon .- s)/norm(s)
-    (soln,res)
-end
-
 struct DecompositionResult
     coefficients :: Vector{Float64}
     refnums :: Vector{Int}
@@ -84,51 +152,51 @@ struct DecompositionResult
     matrix :: Matrix{Float64}
 end
 
-function lsq_analyze(s::Spectrum, lib::Array{Spectrum,1}; callback = refs -> println("Found: #$refs"), kw...)
-    found = Int[]
-    coeffs = Float64[]
-    mincorrs = CORR_THRESHOLDS[:]
-    mincorr = shift!(mincorrs)
-    vecs = Float64[]
-    ss = deepcopy(s)
-    sig = ss[:]
-    ms = mean(sig)
-    println("Signal mean: $ms")
-    while true
-        refnums, matrices = guess_matrices(ss, lib; avg=ms, mincorr = mincorr, exclude=found, kw...)
-        println("Forming $(length(matrices)) matrices (correlation threshold = $mincorr)")
-        if issubset(refnums, found)
-            if isempty(mincorrs)
-                return DecompositionResult(coeffs,found,s[:],
-                                           isempty(vecs)?Matrix{Float64}(0,0):reshape(vecs,(:,length(found))))
-            else
-                mincorr = shift!(mincorrs)
-                continue
-            end
-        end
-        res = vec(collect(lsq_analyze(sig, m) for m in matrices))
-        _,best = findmin(r[2] for r in res)
-        # _,max_component = findmax(res[best][1]) # Largest constituent
-        for (i,m) in enumerate(matrices)
-            if i==best
-                # return DecompositionResult(res[best][1], refnums, sig, m)
-                for (j,r) in enumerate(refnums)
-                # r = refnums[max_component]
-                    # println("j: $j, max_component: $max_component")
-                    sig .-= m[:,j] .* res[i][1][j]
-                    if r ∉ found
-                        append!(coeffs, res[i][1][j])
-                        append!(found, r)
-                        append!(vecs, m[:,j])
-                    end
-                end
-                callback(refnums)
-                break
-                # end
-            end
-        end
-        ss[:] = sig
+function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
+    ll = length(lib)
+    gs = Array{Any}(undef, ll)
+    fit_scores = Array{Array{Float64,1}}(undef, ll)
+    scores = Array{Array{Float64,1}}(undef, ll)
+    @Threads.threads for r=1:ll
+        gs[r] = guesses_adaptive(s, lib[r]; kw...)
+        fit_scores[r] = isempty(gs[r]) || r ∈ found ? [0.0] : fit_score.(s, lib[r], gs[r])
+        scores[r] = isempty(gs[r]) || r ∈ found ? [0.0] : score.(s, lib[r], gs[r])
     end
+    # find best guess per reference based on overall score
+    bestinds = indmax.(scores)
+    # find best reference based on fit_score
+    max_score,max_ref = findmax(getindex.(fit_scores, bestinds))
+    if max_score == 0.0
+        return (s, 0, (), 0.0, Float64[])
+    end
+    # pss = score.(s, lib[maxind], gs[maxind])
+    # _,maxguessind = findmax(pss)
+    maxguess = gs[max_ref][bestinds[max_ref]]
+    ss = deepcopy(s)
+    l = synthesize(lib[max_ref], maxguess)
+    p = projection(s, lib[max_ref], maxguess)
+    ss[:] .-= p.*l
+    ss, max_ref, maxguess, p, l
+end
+
+function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
+                     callback = refs -> println("Found: #$refs"), kw...)
+    found = Int64[]
+    coeffs = Float64[]
+    vecs = Array{Float64,1}[]
+    ss = copy(s[:])
+    ms = MINFACT * norm(ss)
+    while true
+        s, m, g, p, v = lsq_analyze(s, lib, found; minsig=ms, kw...)
+        if m == 0
+            break
+        end
+        push!(found, m)
+        push!(vecs, v)
+        push!(coeffs, p)
+        callback([m])
+    end
+    DecompositionResult(coeffs, found, ss, hcat(vecs...))
 end
 
 function decompose(d::DecompositionResult)
