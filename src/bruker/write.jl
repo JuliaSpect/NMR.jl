@@ -1,4 +1,4 @@
-import Base: show
+import Base: show, dump
 
 function show(io::IO, intrng::Array{Intrng,1})
     write(io, """A 1.0 #regions in PPM
