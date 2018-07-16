@@ -1,0 +1,28 @@
+##TITLE= Audit trail, TOPSPIN		Version 2.1
+##JCAMPDX= 5.01
+##ORIGIN= Bruker BioSpin GmbH
+##OWNER= hmehr
+$$ /opt/topspin2.1/data/hmehr/nmr/PhB(OH)2/1/audita.txt
+##AUDIT TRAIL=  $$ (NUMBER, WHEN, WHO, WHERE, PROCESS, VERSION, WHAT)
+(   1,<2013-12-19 14:21:54.320 -0800>,<hmehr>,<sifav300.chem.ubc.ca>,<go>,<TOPSPIN 2.1>,
+      <created by zg
+	started at 2013-12-19 14:21:20.496 -0800,
+	POWCHK enabled, PULCHK disabled,
+       terminated by command 'stop'
+       configuration hash MD5:
+       3F 99 A1 71 73 10 A9 BA A7 82 B5 C7 52 31 B2 5C
+       data hash MD5: 18486
+       2A E7 C5 BA 64 28 69 33 29 8E 56 F8 6C F3 E1 20>)
+(   2,<2013-12-19 14:22:37.712 -0800>,<hmehr>,<sifav300.chem.ubc.ca>,<go>,<TOPSPIN 2.1>,
+      <continue with go
+	started at 2013-12-19 14:22:09.577 -0800,
+	POWCHK enabled, PULCHK disabled,
+       terminated by command 'halt'
+       configuration hash MD5:
+       3F 99 A1 71 73 10 A9 BA A7 82 B5 C7 52 31 B2 5C
+       data hash MD5: 18486
+       DD 43 07 E7 24 B8 30 EE 86 9C C4 34 40 B1 CB 9A>)
+##END=
+
+$$ hash MD5
+$$ 7F CB A8 EA 2B 18 2B 89 75 58 5F B5 53 D2 E0 49

@@ -1,0 +1,37 @@
+##TITLE= Audit trail, TOPSPIN		Version 2.1
+##JCAMPDX= 5.01
+##ORIGIN= Bruker BioSpin GmbH
+##OWNER= hmehr
+$$ /opt/topspin2.1/data/hmehr/nmr/PhB(OH)2/1/pdata/1/auditp.txt
+##AUDIT TRAIL=  $$ (NUMBER, WHEN, WHO, WHERE, PROCESS, VERSION, WHAT)
+(   1,<2013-12-19 14:21:54.320 -0800>,<hmehr>,<sifav300.chem.ubc.ca>,<go>,<TOPSPIN 2.1>,
+      <created by zg
+	started at 2013-12-19 14:21:20.496 -0800,
+	POWCHK enabled, PULCHK disabled,
+       terminated by command 'stop'
+       configuration hash MD5:
+       3F 99 A1 71 73 10 A9 BA A7 82 B5 C7 52 31 B2 5C
+       data hash MD5: 18486
+       2A E7 C5 BA 64 28 69 33 29 8E 56 F8 6C F3 E1 20>)
+(   2,<2013-12-19 14:22:37.712 -0800>,<hmehr>,<sifav300.chem.ubc.ca>,<go>,<TOPSPIN 2.1>,
+      <continue with go
+	started at 2013-12-19 14:22:09.577 -0800,
+	POWCHK enabled, PULCHK disabled,
+       terminated by command 'halt'
+       configuration hash MD5:
+       3F 99 A1 71 73 10 A9 BA A7 82 B5 C7 52 31 B2 5C
+       data hash MD5: 18486
+       DD 43 07 E7 24 B8 30 EE 86 9C C4 34 40 B1 CB 9A>)
+(   3,<2013-12-19 14:22:40.215 -0800>,<hmehr>,<sifav300.chem.ubc.ca>,<proc1d>,<TOPSPIN 2.1>,
+      <Start of raw data processing
+       efp LB = 0.3 FT_mod = 6 PKNL = 1 PHC0 = -24.97423 PHC1 = -13.30972 SI = 32K 
+       data hash MD5: 32K
+       EF CA 44 21 AF D7 2E 16 37 53 4E 7A 8F DE FC E6>)
+(   4,<2013-12-19 14:22:42.765 -0800>,<hmehr>,<sifav300.chem.ubc.ca>,<proc1d>,<TOPSPIN 2.1>,
+      <apk 
+       data hash MD5: 32K
+       FF E2 9C CC 3B A3 9E 7D C6 45 04 1D 27 78 C7 16>)
+##END=
+
+$$ hash MD5
+$$ A9 9C F5 1B 59 AD 73 50 BD 78 FF 68 51 09 46 65
