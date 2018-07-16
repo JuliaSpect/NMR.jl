@@ -1,10 +1,12 @@
+import Base: in
+
 limits(s::Spectrum) = limits(s["O1P"], s["SW"], s["SF"], s["BF1"])
 limits(o1p, sw, sf, bf) = begin
     shift = 1e6(bf-sf)/bf
     (o1p - sw/2 + shift, o1p + sw/2 + shift)
 end
 
-function within(s::Spectrum, δ)
+function in(δ, s::Spectrum)
     l,h = limits(s)
     l < δ < h
 end
