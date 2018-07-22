@@ -81,7 +81,7 @@ include("show.jl")
 export Spectrum, ProcessedSpectrum, dump, # constructors, I/O
        plot, plot!, # plotting
        lsq_analyze, candidates, decompose, # decomposition
-       ppmtoindex, hztoindex, hztoppm, # unit conversion
+       ppmtoindex, hztoindex, ppmtohz, # unit conversion
        baseline_correct!, # processing
        limits, chemical_shifts, extract, copy! # utility functions
        interpolate, resample # interpolation
