@@ -1,4 +1,3 @@
-import Plots: plot, plot!
 using Formatting
 using RecipesBase
 

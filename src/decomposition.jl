@@ -1,5 +1,8 @@
 import StatsBase
 
+using LinearAlgebra: norm, normalize, dot
+using Statistics
+
 const MINFACT = 0.1
 const HITCORR = 0.9
 const MINCORR = 0.25 # reasonable default
