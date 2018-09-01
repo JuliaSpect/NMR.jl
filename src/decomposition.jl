@@ -162,11 +162,11 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
     scores = Array{Array{Float64,1}}(undef, ll)
     @Threads.threads for r=1:ll
         gs[r] = guesses_adaptive(s, lib[r]; kw...)
-        fit_scores[r] = isempty(gs[r]) || r ∈ found ? [0.0] : fit_score.(s, lib[r], gs[r])
-        scores[r] = isempty(gs[r]) || r ∈ found ? [0.0] : score.(s, lib[r], gs[r])
+        fit_scores[r] = isempty(gs[r]) || r ∈ found ? [0.0] : fit_score.(Ref(s), Ref(lib[r]), gs[r])
+        scores[r] = isempty(gs[r]) || r ∈ found ? [0.0] : score.(Ref(s), Ref(lib[r]), gs[r])
     end
     # find best guess per reference based on overall score
-    bestinds = indmax.(scores)
+    bestinds = argmax.(scores)
     # find best reference based on fit_score
     max_score,max_ref = findmax(getindex.(fit_scores, bestinds))
     if max_score == 0.0

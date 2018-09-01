@@ -11,7 +11,7 @@ end
 
 function intrng_shifts(s::Spectrum)
     rng = intrng(s)
-    [linspace(i[1],i[2],ppmtoindex(s,i[2])-ppmtoindex(s,i[1])+1) for i in rng]
+    [range(i[1]; stop=i[2], length=ppmtoindex(s,i[2])-ppmtoindex(s,i[1])+1) for i in rng]
 end
 
 function find_rng(p::ProcessedSpectrum, δ::Float64)
