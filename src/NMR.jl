@@ -83,7 +83,8 @@ export Spectrum, ProcessedSpectrum, dump, # constructors, I/O
        lsq_analyze, candidates, decompose, # decomposition
        ppmtoindex, hztoindex, ppmtohz, # unit conversion
        baseline_correct!, # processing
-       limits, chemical_shifts, extract, copy! # utility functions
-       interpolate, resample # interpolation
+       limits, chemical_shifts, extract, copy!, # utility functions
+       interpolate, resample, # interpolation
+       integrate, # integration
        intrng, intrng_data, intrng_indices, intrng_shifts # integration regions
 end
