@@ -1,4 +1,3 @@
-using Formatting
 using RecipesBase
 
 function plot_limits(s::NMR.Spectrum, margin = 0.1)
