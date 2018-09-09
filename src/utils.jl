@@ -28,7 +28,7 @@ end
 
 function chemical_shifts(s::Spectrum)
     lo,hi = limits(s)
-    linspace(hi,lo,length(s[:]))
+    range(hi; stop=lo, length=length(s[:]))
 end
 
 

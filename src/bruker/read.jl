@@ -13,15 +13,9 @@ function parse_float_list(m)
     [parse(Float64, s) for s in split(m)[2:end]]
 end
 
-function parse_or(::Type{T}, s, default) where T
+function parse_or(::Type{T}, s, default::T) where T
     v = tryparse(T, s)
-    if isa(v, T)
-        return v
-    elseif v === nothing
-        return default
-    else
-        isnull(v) ? default : v.value # for Julia 0.6 compatibility
-    end
+    v === nothing ? default : v
 end
 
 filters = [ ( Set(["SW", "O1", "SFO1", "SF", "BF1"]),

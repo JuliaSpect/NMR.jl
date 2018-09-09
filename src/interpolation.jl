@@ -5,7 +5,7 @@ import Interpolations: interpolate
 function interpolate(s::Spectrum)
     l,h = limits(s)
     fn = extrapolate(interpolate(s[:], BSpline(Cubic(Natural())), OnGrid()), Flat())
-    scaled = scale(fn, linspace(h,l,length(s)))
+    scaled = scale(fn, range(h; stop=l, length=length(s)))
     δ -> scaled[δ]
 end
 

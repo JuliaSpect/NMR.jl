@@ -27,7 +27,7 @@ end
     yticks --> []
     for s in ss
         @series begin
-            x = linspace(Δ[1], Δ[2], npoints)
+            x = range(Δ[1]; stop=Δ[2], length=npoints)
             y = resample(s, x)
             x,y
         end

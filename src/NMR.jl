@@ -1,7 +1,5 @@
 module NMR
 
-using Compat
-
 "Integration range in the frequency domain, values given in ppm."
 const Intrng = Tuple{Float64, Float64}
 
