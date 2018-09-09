@@ -1,11 +1,9 @@
 name = "NMR"
-uuid = "b16bd9d8-8895-11e8-22c4-8b9b4a7e64af"
+uuid = "ccd5ae15-cd25-53ab-b4f2-e0ae14ef09d4"
 authors = ["Hessam Mehr <hessammehr@gmail.com>"]
-version = "0.3.0"
+version = "0.4.0"
 
 [deps]
-Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
-Formatting = "59287772-0a20-5a39-b81b-1366585eb4c0"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
