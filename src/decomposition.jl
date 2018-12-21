@@ -87,6 +87,7 @@ function projection_weights(projs, fitness_weights=ones(length(projs)), η=2.0)
     # p = projections(s, l, positions(guess))
     fw = StatsBase.weights(fitness_weights)
     σ = std(projs, fw; corrected=false)/η
+	σ == 0 && return ones(length(projs))
     m = mean(projs, fw)
     exp.(-(projs.-m).^2/2σ^2)
 end
