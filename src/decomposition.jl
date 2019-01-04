@@ -154,6 +154,7 @@ struct DecompositionResult
     refnums :: Vector{Int}
     signal :: Vector{Float64}
     matrix :: Matrix{Float64}
+	fit_scores :: Array{Array{Float64,1}}
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
@@ -188,6 +189,7 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
     found = Int64[]
     coeffs = Float64[]
     vecs = Array{Float64,1}[]
+	fit_scores = Array{Float64,1}[]
     ss = copy(s[:])
     ms = MINFACT * norm(ss)
     while true
@@ -198,9 +200,10 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
         push!(found, m)
         push!(vecs, v)
         push!(coeffs, p)
+		push!(fit_scores, fitness(g))
         callback([m])
     end
-    DecompositionResult(coeffs, found, ss, hcat(vecs...))
+    DecompositionResult(coeffs, found, ss, hcat(vecs...), fit_scores)
 end
 
 function decompose(d::DecompositionResult)
