@@ -87,7 +87,7 @@ function projection_weights(projs, fitness_weights=ones(length(projs)), η=2.0)
     # p = projections(s, l, positions(guess))
     fw = StatsBase.weights(fitness_weights)
     σ = std(projs, fw; corrected=false)/η
-	σ == 0 && return ones(length(projs))
+    σ == 0 && return ones(length(projs))
     m = mean(projs, fw)
     exp.(-(projs.-m).^2/2σ^2)
 end
@@ -154,7 +154,7 @@ struct DecompositionResult
     refnums :: Vector{Int}
     signal :: Vector{Float64}
     matrix :: Matrix{Float64}
-	fit_scores :: Array{Array{Float64,1}}
+    fit_scores :: Array{Array{Float64,1}}
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
@@ -189,7 +189,7 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
     found = Int64[]
     coeffs = Float64[]
     vecs = Array{Float64,1}[]
-	fit_scores = Array{Float64,1}[]
+    fit_scores = Array{Float64,1}[]
     ss = copy(s[:])
     ms = MINFACT * norm(ss)
     while true
@@ -200,7 +200,7 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
         push!(found, m)
         push!(vecs, v)
         push!(coeffs, p)
-		push!(fit_scores, fitness(g))
+        push!(fit_scores, fitness(g))
         callback([m])
     end
     DecompositionResult(coeffs, found, ss, hcat(vecs...), fit_scores)
