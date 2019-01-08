@@ -105,11 +105,12 @@ end
 function projection(s::Spectrum, l::Spectrum, guess::NTuple{N,Tuple{Int64,Float64}}) where N
     projs = projections(s, l, positions(guess))
     if length(projs) == 1
-        return first(projs)
+        return first(projs), [1]
     end
     fw = fitness_weights(guess)
+    pw = projection_weights(projs, fw)
     # projection(s, l, positions(guess), f(s, l, guess))
-    mean(projs, StatsBase.weights(projection_weights(projs, fw)))
+    mean(projs, StatsBase.weights(pw)), pw
     # projection(s, l, positions(guess), Float64[f(ff) for ff in fitness(guess)])
 end
 
@@ -155,6 +156,7 @@ struct DecompositionResult
     signal :: Vector{Float64}
     matrix :: Matrix{Float64}
     fit_scores :: Array{Array{Float64,1}}
+    weights :: Array{Array{Float64,1}}
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
@@ -162,6 +164,7 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
     gs = Array{Any}(undef, ll)
     fit_scores = Array{Array{Float64,1}}(undef, ll)
     scores = Array{Array{Float64,1}}(undef, ll)
+    pw = Array{Float64,1}
     @Threads.threads for r=1:ll
         gs[r] = guesses_adaptive(s, lib[r]; kw...)
         fit_scores[r] = isempty(gs[r]) || r ∈ found ? [0.0] : fit_score.(Ref(s), Ref(lib[r]), gs[r])
@@ -172,16 +175,16 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
     # find best reference based on fit_score
     max_score,max_ref = findmax(getindex.(fit_scores, bestinds))
     if max_score == 0.0
-        return (s, 0, (), 0.0, Float64[])
+        return (s, 0, (), 0.0, Float64[], Float64[])
     end
     # pss = score.(s, lib[maxind], gs[maxind])
     # _,maxguessind = findmax(pss)
     maxguess = gs[max_ref][bestinds[max_ref]]
     ss = deepcopy(s)
     l = synthesize(lib[max_ref], maxguess)
-    p = projection(s, lib[max_ref], maxguess)
+    p, pw = projection(s, lib[max_ref], maxguess)
     ss[:] .-= p.*l
-    ss, max_ref, maxguess, p, l
+    ss, max_ref, maxguess, p, l, pw
 end
 
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
@@ -190,10 +193,11 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
     coeffs = Float64[]
     vecs = Array{Float64,1}[]
     fit_scores = Array{Float64,1}[]
+    weights = Array{Float64,1}[]
     ss = copy(s[:])
     ms = MINFACT * norm(ss)
     while true
-        s, m, g, p, v = lsq_analyze(s, lib, found; minsig=ms, kw...)
+        s, m, g, p, v, pw = lsq_analyze(s, lib, found; minsig=ms, kw...)
         if m == 0
             break
         end
@@ -201,9 +205,10 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
         push!(vecs, v)
         push!(coeffs, p)
         push!(fit_scores, fitness(g))
+        push!(weights, pw)
         callback([m])
     end
-    DecompositionResult(coeffs, found, ss, hcat(vecs...), fit_scores)
+    DecompositionResult(coeffs, found, ss, hcat(vecs...), fit_scores, weights)
 end
 
 function decompose(d::DecompositionResult)
