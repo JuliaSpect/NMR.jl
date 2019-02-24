@@ -9,9 +9,9 @@ Create an interpolate objection with data and limits of Spectrum `s`
 """
 function interpolate(s::Spectrum)
     l,h = limits(s)
-    fn = extrapolate(interpolate(s[:], BSpline(Cubic(Natural())), OnGrid()), Flat())
-    scaled = scale(fn, range(h; stop=l, length=length(s)))
-    δ -> scaled[δ]
+    fn = extrapolate(interpolate(s[:], BSpline(Cubic(Natural(OnGrid())))), Flat())
+    scaled = scale(fn, range(l; stop=h, length=length(s)))
+    δ -> scaled(h + (l - δ))
 end
 
 """
