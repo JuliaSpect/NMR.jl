@@ -24,6 +24,7 @@ end
     framestyle --> :box
     xticks --> :auto
     yticks --> []
+    xlabel --> "Chemical shift (ppm)"
     for s in ss
         @series begin
             x = range(Δ[1]; stop=Δ[2], length=npoints)
