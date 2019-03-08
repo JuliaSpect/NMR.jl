@@ -14,8 +14,8 @@ const Guess{N} = NTuple{N,Tuple{Int64,Float64}} where N
 """
     overlay!(signal, chunks, positions)
 
-Overlay a series of chunks on top of a signal at the
-specified positions.
+Overlay a series of `chunks` on top of a `signal` at the
+specified `positions`.
 """
 function overlay!(signal, chunks, positions)
     for (i,c) in enumerate(chunks)
@@ -30,22 +30,22 @@ function alignments(signal, chunk, start_pos; tol=250, fuzziness=1.5,
     l = length(chunk)
     section = max(1, -tol+start_pos):min(length(signal), tol+l-1+start_pos)
     s = @view signal[section]
-    # reject weak signals, important if signal only contains noise
     c = normalize(chunk)
-    # return s,c
     corr = zeros(length(section)-l+1)
     lc = length(corr)
+    
+    # reject weak signals, important if signal only contains noise
     lratio = l/length(signal)
     for i in eachindex(corr)
         sig = @view s[i:(i+l-1)]
         xc = dot(c,sig)
         corr[i] = xc < minsig*lratio ? 0.001 :  xc/norm(sig)
     end
+    
     M = maximum(corr)
     if M < mincorr
         return Tuple{Int64,Float64}[]
     end
-    # println(M)
     ps = section.start - 1
     let lc=lc, corr=corr, ps=ps, M=M
         Tuple{Int64,Float64}[ (i+ps, corr[i]) for i=eachindex(corr) if
@@ -159,6 +159,17 @@ struct DecompositionResult
     weights :: Array{Array{Float64,1}}
 end
 
+"""
+    lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
+
+Execute one iteration of analysis of Spectrum `s` against library `lib`, excluding entries included in `found`.
+
+A match is found based on its fit score (comparing overall shape). A limited amount of adjustments in chemical shift
+is available, using an overall scoring system combining fit score and projection score (agreement of integral values
+in integration windows) to determine the best adjustment. Return a copy of the input spectrum with matched entry
+subtracted, the identity of the match, the guess containing fit score, projection, synthesized spectrum, and
+projection weight.
+"""
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
     ll = length(lib)
     gs = Array{Any}(undef, ll)
@@ -187,6 +198,15 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}, found; kw...)
     ss, max_ref, maxguess, p, l, pw
 end
 
+"""
+    lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum}; kw...)
+
+Return decomposition result based on analysis of Spectrum `s` against library `lib`.
+
+`s` is analyzed iteratively against every entry in `lib`. If one entry is found, the weighted
+resonance contributions from that library entry is subtracted from `s` and the anlysis is repeated until
+no new entries are found to match.
+"""
 function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
                      callback = refs -> println("Found: #$refs"), kw...)
     found = Int64[]
@@ -211,6 +231,13 @@ function lsq_analyze(s::Spectrum, lib::AbstractArray{Spectrum};
     DecompositionResult(coeffs, found, ss, hcat(vecs...), fit_scores, weights)
 end
 
+
+"""
+    decompose(d::DecompositionResult)
+
+Process DecompositionResult `d` to return the individual components, reconstructed spectrum,
+and residue signal.
+"""
 function decompose(d::DecompositionResult)
     if isempty(d.coefficients)
         return ([],zeros(length(d.signal)), d.signal)
