@@ -52,7 +52,7 @@ end
 """
     ppmtomhz_abs(δ, bf, sr = 0.0)
 
-Convert chemical shift `δ` to absolute frequency Ω in MHz.
+Convert chemical shift `δ` to absolute frequency Ω in Hz.
 `bf` in MHz and `sr` in Hz.
 """
 function ppmtomhz_abs(δ, bf, sr = 0.0)

@@ -1,8 +1,11 @@
 # Bruker I/O functions
 
-"""     read_bruker_binary(fname)
+"""
+    read_bruker_binary(fname)
+
 Bruker FID, and processed frequency-domain data files (fid, 1r, 1i) contain a flat
-binary representation of their data points, each of which is an Int32."""
+binary representation of their data points, each of which is an Int32.
+"""
 function read_bruker_binary(fname)
     reinterpret(Int32, open(read, fname))
 end
@@ -74,7 +77,7 @@ Construct ProcessedSpectrum object parsing data in `procno` within `path`.
 function ProcessedSpectrum(path :: AbstractString, procno :: Int)
     re_ft = float(read_bruker_binary(joinpath(path, "1r")))
     im_ft = float(read_bruker_binary(joinpath(path, "1i")))
-    params = read_params(joinpath(path, "proc"))
+    params = read_params(joinpath(path, "procs"))
     title = read(joinpath(path, "title"), String)
     intrng = read_intrng(joinpath(path, "intrng"))
     ProcessedSpectrum(re_ft, im_ft, params, intrng, procno, title)
@@ -94,7 +97,7 @@ Use data only in the array of `procnos` within `path`, with defined `default_pro
 """
 Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}, default_proc :: Int) = begin
     fid = float(read_bruker_binary(joinpath(path, "fid")))
-    acqu = read_params(joinpath(path, "acqu"))
+    acqu = read_params(joinpath(path, "acqus"))
     name = basename(dirname(path))
     expno = parse(Int, basename(path))
     procs = Dict()
