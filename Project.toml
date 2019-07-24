@@ -1,7 +1,7 @@
 name = "NMR"
 uuid = "ccd5ae15-cd25-53ab-b4f2-e0ae14ef09d4"
 authors = ["Hessam Mehr <hessammehr@gmail.com>"]
-version = "0.4.0"
+version = "3.2.0"
 
 [deps]
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
