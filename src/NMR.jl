@@ -32,7 +32,7 @@ Unprocessed NMR experiment: FID and any associated processed spectra.
 
 Following Bruker convention:
 - **fid**: Acquired free induction decay (FID) signal
-- **acqu**: Acquisition parameters, mostly from `acqu` file for Bruker data
+- **acqu**: Acquisition parameters, mostly from `acqus` file for Bruker data
 - **procs**: Dictionary of associated processed spectra
 - **default_proc**: Default processed spectrum to be used in operations that require a processed spectrum
 - **name**: Experiment name

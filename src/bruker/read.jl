@@ -23,11 +23,11 @@ end
 
 filters = [ ( Set(["SW", "O1", "SFO1", "SF", "BF1"]),
               s -> parse(Float64, s) ),
-            ( Set(["TD", "NS", "DS", "SI"]),
+            ( Set(["TD", "NS", "DS", "SI", "DATE"]),
               s -> parse(Int, s) ),
             ( Set(["D", "P"]),
               parse_float_list),
-            ( Set(["PULPROG"]),
+            ( Set(["PULPROG", "EXP"]),
               x -> strip(x)[2:end-1] ),
             ( Set(["AUTOPOS"]),
               x -> parse_or(Int, strip(x)[2:end-1], 0) )
