@@ -25,6 +25,12 @@ for op in (:+, :-, :*)
     end
 end
 
+"""
+    copy!(src::Spectrum, dst::Spectrum, shift_rng::Tuple{Float64,Float64})
+
+Copy data from source Spectrum `src` to the destination Spectrum `dst`
+in the chemical shift range `shift_rng` in ppm.
+"""
 function copy!(src::Spectrum, dst::Spectrum, shift_rng::Tuple{Float64,Float64})
     d = resample(src, chemical_shifts(dst))
     rng = ppmtoindex(dst, shift_rng)

@@ -9,6 +9,11 @@ function show(io::IO, intrng::Array{Intrng,1})
     end
 end
 
+"""
+    dump(path, s::Spectrum)
+
+Save the NMR spectrum `s` and its associated procs to a valid directory `path`.
+"""
 function dump(path, s::Spectrum)
     if !isdir(path)
         mkdir(path)
@@ -25,11 +30,21 @@ function dump(path, s::Spectrum)
     # TODO: Save acqu/acqus
 end
 
+"""
+    dump(path, s::Spectrum, templatepath)
+
+Copy `templatepath` to `path` while saving `s`.
+"""
 function dump(path, s::Spectrum, templatepath)
     cp(templatepath, path)
     dump(path, s)
 end
 
+"""
+    dump(path, p::ProcessedSpectrum)
+
+Save the processed files only.
+"""
 function dump(path, p::ProcessedSpectrum)
     if !isdir(path)
         mkdir(path)

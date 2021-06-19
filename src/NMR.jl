@@ -9,6 +9,7 @@ Processed (frequency domain) NMR spectrum. Parameters follow the Bruker conventi
 - **im_ft**: imaginary part of Fourier transform
 - **params**: dictionary of processing parameters, mostly from `proc` file for Bruker data
 - **intrng**: list of integration ranges
+- **procno**: proc number
 - **title**: Spectrum title
 """
 mutable struct ProcessedSpectrum
@@ -63,6 +64,11 @@ Base.setindex!(s::Spectrum, d::AbstractArray, ::Colon) = (s[s.default_proc].re_f
 Base.setindex!(s::Spectrum, d::AbstractArray, r::UnitRange) = (s[s.default_proc].re_ft[r] .= d)
 Base.setindex!(s::Spectrum, d, rng::Tuple{Float64, Float64}) = (s[s.default_proc].re_ft[ppmtoindex(s,rng)]=d)
 
+"""
+    Spectrum(fid :: Vector{Float64}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum)
+
+Construct Spectrum object given time-domain data `fid`, acquisition parameters `acqu`, and processed spectrum `proc`.
+"""
 Spectrum(fid :: Vector{Float64}, acqu :: Dict{Any, Any}, proc :: ProcessedSpectrum) = Spectrum(fid, acqu, Dict(1=>proc), 1, "", "")
 
 include("utils.jl")

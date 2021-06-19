@@ -66,6 +66,11 @@ function parse_param(param, val)
     return strip(val)
 end
 
+"""
+    ProcessedSpectrum(path :: AbstractString, procno :: Int)
+
+Construct ProcessedSpectrum object parsing data in `procno` within `path`.
+"""
 function ProcessedSpectrum(path :: AbstractString, procno :: Int)
     re_ft = float(read_bruker_binary(joinpath(path, "1r")))
     im_ft = float(read_bruker_binary(joinpath(path, "1i")))
@@ -75,8 +80,18 @@ function ProcessedSpectrum(path :: AbstractString, procno :: Int)
     ProcessedSpectrum(re_ft, im_ft, params, intrng, procno, title)
 end
 
+"""
+    ProcessedSpectrum(path::AbstractString)
+
+If no procno given, it is extracted from basename of `path`.
+"""
 ProcessedSpectrum(path::AbstractString) = ProcessedSpectrum(path, parse(Int, basename(path)))
 
+"""
+    Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}, default_proc :: Int)
+
+Use data only in the array of `procnos` within `path`, with defined `default_proc`.
+"""
 Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}, default_proc :: Int) = begin
     fid = float(read_bruker_binary(joinpath(path, "fid")))
     acqu = read_params(joinpath(path, "acqu"))
@@ -90,10 +105,25 @@ Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}, default_proc :: 
     Spectrum(fid, acqu, procs, default_proc, name, expno)
 end
 
+"""
+    Spectrum(path :: AbstractString, procno :: Int)
+
+Use data only from `procno` within `path`.
+"""
 Spectrum(path :: AbstractString, procno :: Int) = Spectrum(path, [procno], procno)
 
+"""
+    Spectrum(path :: AbstractString, procnos :: AbstractArray{Int})
+
+Use data only in the array of `procnos` within `path`, setting the lowest in `procnos` as the default.
+"""
 Spectrum(path :: AbstractString, procnos :: AbstractArray{Int}) = Spectrum(path, procnos, minimum(procnos))
 
+"""
+    Spectrum(path :: AbstractString)
+
+Use data from every processed data file within `path`.
+"""
 Spectrum(path :: AbstractString) = begin
     procnos = [parse(Int,n) for n in readdir(joinpath(path, "pdata"))]
     Spectrum(path, procnos)

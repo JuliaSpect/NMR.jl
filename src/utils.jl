@@ -15,7 +15,18 @@
 
 import Base: in
 
+"""
+    limits(s::Spectrum)
+
+Return the chemical shift limits of the Spectrum `s` in units of ppm.
+"""
 limits(s::Spectrum) = limits(s["O1P"], s["SW"], s["SF"], s["BF1"])
+
+"""
+    limits(o1p, sw, sf, bf)
+
+Return the chemical shift limits given `o1p`, `sw`, `sf`, `bf`.
+"""
 limits(o1p, sw, sf, bf) = begin
     shift = 1e6(bf-sf)/bf
     (o1p - sw/2 + shift, o1p + sw/2 + shift)
@@ -26,6 +37,12 @@ function in(δ, s::Spectrum)
     l < δ < h
 end
 
+
+"""
+    chemical_shifts(s::Spectrum)
+
+Return an iterator counting the chemical shift in ppm for each data point in Spectrum `s`
+"""
 function chemical_shifts(s::Spectrum)
     lo,hi = limits(s)
     range(hi; stop=lo, length=length(s[:]))
@@ -33,9 +50,10 @@ end
 
 
 """
-    ppmtomhz_abs(δ, bf[, sr])
-Convert chemical shift δ to absolute frequency Ω in MHz.
-bf in MHz and sr in Hz.
+    ppmtomhz_abs(δ, bf, sr = 0.0)
+
+Convert chemical shift `δ` to absolute frequency Ω in MHz.
+`bf` in MHz and `sr` in Hz.
 """
 function ppmtomhz_abs(δ, bf, sr = 0.0)
     bf = bf * 1e6
@@ -43,18 +61,20 @@ function ppmtomhz_abs(δ, bf, sr = 0.0)
 end
 
 """
-    ppmtohz(δ, bf[, sr])
-Convert chemical shift δ in ppm to relative frequency ω in Hz.
-bf in MHz and sr in Hz.
+    ppmtohz(δ, bf, sr = 0.0)
+
+Convert chemical shift `δ` in ppm to relative frequency ω in Hz.
+`b` in MHz and `sr` in Hz.
 """
 function ppmtohz(δ, bf, sr = 0.0)
     (bf + sr*1e-6)δ
 end
 
 """
-    hztoppm(ω, bf[, sr])
-Convert relative frequency ω in Hz to chemical shift δ in ppm .
-bf in MHz and sr in Hz.
+    hztoppm(ω, bf, sr = 0.0)
+
+Convert relative frequency `ω` in Hz to chemical shift δ in ppm .
+`bf` in MHz and `sr` in Hz.
 """
 function hztoppm(ω, bf, sr = 0.0)
     ω / (bf + sr*1e-6)
@@ -62,21 +82,29 @@ end
 
 """
     sr(sf, bf)
+
 Return spectral reference (SR in Bruker notation) in Hz.
-sf and bf in MHz.
+`sf` and `bf` in MHz.
 """
 sr(sf, bf) = 1e6(sf - bf)
 
 """
-    ppmtoindex(::Spectrum, δ)
-Return the index in the processed spectrum corresponding to
-chemical shift δ.
+    ppmtoindex(s::Spectrum, δ)
+
+Return the index in the spectrum `s` corresponding to
+chemical shift `δ`.
 """
 function ppmtoindex(s::Spectrum, δ)
     min_δ ,max_δ = limits(s)
     @. Int(cld(s["SI"]*(max_δ - δ), (max_δ - min_δ)))
 end
 
+
+"""
+    ppmtoindex(s::Spectrum, rng::Tuple{Float64,Float64})
+
+Return the index in the spectrum `s` corresponding to the range `rng`.
+"""
 function ppmtoindex(s::Spectrum, rng::Tuple{Float64,Float64})
     r1,r2 = rng
     if r1>r2
@@ -86,7 +114,19 @@ function ppmtoindex(s::Spectrum, rng::Tuple{Float64,Float64})
     end
 end
 
+"""
+    hztoindex(f, sw, sf, si)
+
+Return the index of a spectrum with spectra width `sw`, spectrometer frequency `sf`,
+number of points `si`, given the frequency `f`.
+"""
 hztoindex(f, sw, sf, si) = Int(cld(f*si, sw*sf))
+
+"""
+    hztoindex(s::Spectrum, f)
+
+Return the index of a spectrum `s` given the frequency `f`.
+"""
 hztoindex(s::Spectrum, f) = hztoindex(f, s["SW"], s["SF"], s["SI"])
 
 Base.length(s::Spectrum) = length(s[:])
@@ -112,9 +152,12 @@ freq_resolution(s::Spectrum) = s["SW"] / length(s)
 
 title(s::Spectrum) = s[s.default_proc].title
 
-# Returns a copy of s with all but the given
-# ranges zeroed out. The default proc for s will
-# have its intrng adjusted to Δs as well.
+"""
+    extract(s::Spectrum, Δs::AbstractArray{Intrng})
+
+Return a copy of Spectrum `s` with all but the given ranges `Δs` zeroed out.
+The default proc for the extracted spectrum will have its intrng adjusted to `Δs` as well.
+"""
 function extract(s::Spectrum, Δs::AbstractArray{Intrng})
     res = deepcopy(s)
     res[res.default_proc].re_ft = zeros(length(s))
@@ -128,6 +171,11 @@ function extract(s::Spectrum, Δs::AbstractArray{Intrng})
     res
 end
 
+"""
+    extract(s::Spectrum, Δ::Intrng)
+
+For a single integral range.
+"""
 extract(s::Spectrum, Δ::Intrng) = extract(s, [Δ])
 
 """Tunes `param` until `expr` evaluates to zero within δ.
@@ -151,10 +199,12 @@ end
 ### Pulse power profile
 
 """     powerprofile(pulse, dt, sfo1)
+
 Pulse power profile for arbitrary pulse shape.
 pulse: Amplitude profile of pulse.
 dt: 'Sampling frequency' — unit of time between points in time. (s)
-sfo1: Centre frequency of pulse. (Hz)"""
+sfo1: Centre frequency of pulse. (Hz)
+"""
 function powerprofile(pulse, dt, sfo1)
     ft = abs2.(fft(pulse))
     l = length(pulse)
